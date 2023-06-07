@@ -1,18 +1,32 @@
+
+
+# 写在前面
+
+我想了想，还是应该把这一章总结为**线性回归与梯度下降**，因为梯度下降不止用于线性回归，应该将这两个话题划分开来。
+
 # 线性回归（Linear Regression）
 
 为数据拟合（fitting）一条直线。线性回归的很多思想在其他model中也有体现。
 
+严格定义的话，线性模型一般可以写成：
+$$
+f(x) = w_1x_1 + w_2x_2 + ... + w_dx_d + b
+$$
+或者使用向量形式
+$$
+f(x) = w^Tx + b
+$$
 
 
 还是房价的那个例子，给出一系列房屋大小-房价的数据，绘图（plot）
 
-![image-20230512160028918](C:\CS\Machine Learning\4-Linear Regression.assets\image-20230512160028918.png)
+![image-20230512160028918](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230512160028918.png)
 
 
 
 也可以绘制Data table
 
-![image-20230512160301990](C:\CS\Machine Learning\4-Linear Regression.assets\image-20230512160301990.png)
+![image-20230512160301990](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230512160301990.png)
 
 
 
@@ -29,7 +43,7 @@
 
 # Linear Regression with One Variable
 
-![image-20230526193948648](C:\CS\Machine Learning\4-Linear Regression.assets\image-20230526193948648.png)
+![image-20230526193948648](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230526193948648.png)
 
 如图，在监督式学习中，学习算法使用训练集学习出一个Model（或者说是一种函数），这个model接受x输入，并预测y的值，记$\hat y$；
 
@@ -37,7 +51,7 @@
 
 定义直线二维坐标下直线的公式
 $$
-f_{w, b}(x) = wx + b
+f_{w, b}(x_i) = wx_i + b, \ 使得f_{w, b}(x) \simeq y_i
 $$
 称有一个输入变量的线性回归公式（也叫Univariate linear egression）。
 
@@ -49,11 +63,12 @@ $$
 
 给定一组数据和一个模型，使用模型预测出y的预测值$\hat y$，将估计值与y的真值（true value）进行比对。从直观上，单组预测值与真值之间的关系可以描述为二者在空间上的距离关系，即$\sqrt{(y - \hat y)^2}$，也可以用$(y - \hat y)^2$来表示这种关系，称平方误差（square error）。将整组数组的误差求和，就可以得到衡量模型整体好坏的总平方误差（total squarre error）。
 
-总平方误差会随着数据量的变化而变化，例如，假定单组数据的平方误差都为1，对于10组数据，总平方误差为10，对于100组数据，总平方误差为100；为了能够比较不同数据量训练出来的模型之间的好坏，还应该对总平方误差取均值，获得平均平方误差（average square error）。习惯上，我们还会多除一个2以简化计算（因为后面要求导，求导会出来一个2）
+总平方误差会随着数据量的变化而变化，例如，假定单组数据的平方误差都为1，对于10组数据，总平方误差为10，对于100组数据，总平方误差为100；为了能够比较不同数据量训练出来的模型之间的好坏，还应该对总平方误差取均值，获得平均平方误差（average square error，或称**均方误差**，**平方损失**）。习惯上，我们还会多除一个2以简化计算（因为后面要求导，求导会出来一个2）
 $$
 Average\ Square\ Errror = \frac 1 {2m}\sum_{i = 1}^{m}(\hat y - y)^2
 $$
 
+> 均方误差是回归任务中最常用的性能度量，对应“**欧氏距离（Euclidean distance）**”，通过最小化均方误差来求解模型的方法称为“**最小二乘法（least square method）**”
 
 # Cost Functionb Intuition
 
@@ -226,3 +241,109 @@ Batch之外还有其他的算法，每次使用训练集的一个子集（Subset
 
 ![image-20230607120205086](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230607120205086.png)
 
+
+
+
+
+# 西瓜书的相关推导
+
+## 均方误差（mean squared error）
+
+在回归任务中最常使用的性能度量就是均方误差。
+$$
+E(f; D) = \frac 1 m \sum_{i = 1}^m(f(x_i) - y_i)^2
+$$
+更一般的情况，对数据分布D和概率密度函数$p(\cdot)$，可描述为
+$$
+E(f; D) = \int_{x \sim d}(f(x) - y)^2p(x)dx
+$$
+
+
+## 凸函数定义
+
+对区间[a,b]上定义的函数，若对区间内任意两点，均有$f(\frac {x_1 + x_2} 2) \le \frac{f(x_1) + f(x_2)} {2} $，则称该函数为区间[a, b]上的凸函数。
+
+换个直观点的说法就是，区间内任意两点，其割线在函数曲线的上方，类似下图
+
+![image-20230607144758127](D:\CS\Machine Learning\4-Linear Regression & Gradient Descent.assets\image-20230607144758127.png)
+
+
+
+对于实数集上的函数，可以通过二阶导数判别是否为凸函数，若二阶导非负，则为凸函数，若二阶导恒大于0，则称为严格凸函数。
+
+> 这里的凸函数定义是最优化里的定义，与高等数学中的凸函数定义不同。
+
+
+
+## 一元线性回归推导
+
+一元线性回归的最优化过程，就是求解w和b，使$E_{w, b} = \sum_{i = 1}^m(wx_i + b - y_i)^2$最小
+
+> 严格上说，西瓜书这里用的不是均方误差，因为没有求均值
+
+分别对w和b求偏导
+$$
+\frac {\part E_{w, b}}{\part w} = \sum_{i = 1}^m \frac {\part} {\part w}(wx_i + b - y_i)^2
+\newline 
+= 2\sum_{i=1}^m (wx_i + b - y_i) x_i
+\newline 
+= 2 (w\sum_{i=1}^m x_i^2 - \sum_{i=1}^m(y_i - b)x_i)
+\newline
+\newline
+\frac {\part E_{w, b}}{\part b} = \sum_{i = 1}^m \frac {\part} {\part b}(wx_i + b - y_i)^2
+\newline 
+= 2 \sum_{i=1}^m (wx_i + b - y_i)
+\newline
+= 2 (mb - \sum_{i=1}^m (y_i - wx_i))
+$$
+
+
+进一步，得到w和b的闭式解（closed-formed solution，也叫解析解analytical solution），等价于吴恩达老师给出的w和b的计算式（这里我从吴恩达老师的公式开始，推导西瓜书的表达式）
+
+> 闭式解指可以通过具体的表达式求出待解参数。例如可以直接根据上面的表达式求得w，机器学习算法很少有闭式解，线性回归是特例。
+
+先推导b，因为后面推w会用到
+$$
+b = b - \alpha \frac {\part}{\part b} J(w, b)
+\newline 
+= b - \frac 1 m \sum_{i = 1}^m (w x_i + b - y_i)
+\newline\rightarrow
+\sum_{i = 1}^m (w x_i + b - y_i) = 0
+\newline\rightarrow
+mb = \sum_{i = 1}^m(y_i - wx_i)
+\newline\rightarrow
+b = \frac 1 m \sum_{i = 1}^m(y_i - wx_i)
+\newline\rightarrow
+b = \bar y - w \bar x
+$$
+接着推导w
+$$
+w = w - \alpha \frac {\part}{\part w} J(w, b)
+\newline
+= w - \frac {1} {m} \sum_{i = 1}^m (w x_i + b - y) * x_i
+\newline\rightarrow
+(w\sum_{i=1}^m x_i^2 - \sum_{i=1}^m(y_i - b)x_i) = 0
+\newline带入b\rightarrow
+w\sum_{i=1}^m x_i^2 = \sum_{i=1}^m y_ix_i - \sum_{i = 1}^m (\bar y - w \bar x)x_i
+\newline\rightarrow
+w \sum_{i=1}^m x_i^2 = \sum_{i=1}^m y_ix_i - \bar y  \sum_{i = 1}^m x_i + w \bar x\sum_{i = 1}^mx_i
+\newline\rightarrow
+w (\sum_{i=1}^m x_i^2 - \bar x\sum_{i = 1}^mx_i) = \sum_{i=1}^m y_ix_i - \bar y  \sum_{i = 1}^m x_i
+\newline\rightarrow
+w = \frac {\sum_{i=1}^m y_ix_i - \bar y  \sum_{i = 1}^m x_i}{\sum_{i=1}^m x_i^2 - \bar x\sum_{i = 1}^mx_i}
+\newline
+令\bar y  \sum_{i = 1}^m x_i = \frac 1 m \sum_{i = 1}^m y_i \sum_{i = 1}^m x_i = \bar x \sum_{i = 1}^m y_i
+\newline
+\bar x\sum_{i = 1}^mx_i = \frac 1 m (\sum_{i = 1}^m x_i)^2
+\newline
+得w = \frac {\sum_{i = 1}^m y_i (x_i - \bar x)}{\sum_{i=1}^m x_i^2 - \frac 1 m (\sum_{i = 1}^mx_i)^2}
+\newline
+
+\newline
+$$
+综上，w和b最优解的闭式解为
+$$
+w = \frac {\sum_{i = 1}^m y_i (x_i - \bar x)}{\sum_{i=1}^m x_i^2 - \frac 1 m (\sum_{i = 1}^mx_i)^2}
+\newline
+b = \frac 1 m \sum_{i = 1}^m(y_i - wx_i)
+$$
