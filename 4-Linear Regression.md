@@ -160,3 +160,69 @@ $$
 \newline
 = \frac 1 m \sum_{i = 1}^m (w x_i + b - y_i)
 $$
+
+
+对于线性回归，不会存在多个局部最小值，而是存在一个全局最小值；这类函数被称为凸函数（Convex Function）。
+
+
+
+# Batch & Subset
+
+Batch指每步训练都使用所有的训练数据进行训练。
+
+Batch之外还有其他的算法，每次使用训练集的一个子集（Subset）进行训练。
+
+
+
+# 导数可视化
+
+对单个参数，可以使用函数曲线进行可视化
+
+![image-20230607111006004](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230607111006004.png)
+
+如果想要同时表示两个参数，可以使用“箭头图”。箭头的大小反映导数大小；箭头的方向表示了该点两个导数的比值。
+
+![image-20230607111042328](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230607111042328.png)
+
+
+
+# 运行梯度下降
+
+![image-20230607112055005](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230607112055005.png)
+
+
+
+从输出中可以看出，成本在逐渐下降。导数最开始很大，然后逐渐变小。下降速度也随着变慢。在固定学习率的情况下，下降速度仍随着导数变慢。
+
+
+
+# 成本下降可视化
+
+因为最开始下降快，后面下降慢，所以分两段绘制
+
+成本应该一致下降，并且先快后慢。
+
+![image-20230607113403789](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230607113403789.png)
+
+
+
+绘制等高线图来查看随着w和b以及成本的变化。
+
+![image-20230607114209249](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230607114209249.png)
+
+
+
+# NumPy报错：Python int too large to convert to C long
+
+这个问题是因为numpy数组默认使用int，需要在赋值语句后面加上`.astype('float')`或者`.astype('int64')`来规定类型为float或int64
+
+另外，在修改外部代码文件后，需要重启jupyter notebook内核，并重新运行代码才能读到修改后的代码。
+
+
+
+# 学习率过大的可视化
+
+如果学习率过大，会使梯度下降冲过最低点，且导致不能收敛的情况。
+
+![image-20230607120205086](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230607120205086.png)
+
