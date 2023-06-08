@@ -347,3 +347,7 @@ w = \frac {\sum_{i = 1}^m y_i (x_i - \bar x)}{\sum_{i=1}^m x_i^2 - \frac 1 m (\s
 \newline
 b = \frac 1 m \sum_{i = 1}^m(y_i - wx_i)
 $$
+
+
+
+
