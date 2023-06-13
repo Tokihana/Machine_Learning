@@ -259,6 +259,7 @@ E(f; D) = \int_{x \sim d}(f(x) - y)^2p(x)dx
 $$
 
 
+
 ## 凸函数定义
 
 对区间[a,b]上定义的函数，若对区间内任意两点，均有$f(\frac {x_1 + x_2} 2) \le \frac{f(x_1) + f(x_2)} {2} $，则称该函数为区间[a, b]上的凸函数。
@@ -275,7 +276,7 @@ $$
 
 
 
-## 一元线性回归推导
+## 一元线性回归闭式解推导
 
 一元线性回归的最优化过程，就是求解w和b，使$E_{w, b} = \sum_{i = 1}^m(wx_i + b - y_i)^2$最小
 
@@ -351,3 +352,92 @@ $$
 
 
 
+
+## 补充：最小二乘估计与极大似然估计
+
+基于均方误差最小化来进行模型求解的方法称为”最小二乘法“，前一小节已经讨论过很多了。
+$$
+\arg\min_{(w,b)}E_{(w, b)} = \sum_{i = 1}^m(y_i - f(x_i))^2
+\newline
+= \sum_{i = 1}^m(y_i - (wx_i + b))^2
+$$
+
+> $\arg\min_{(w,b)}$意思是使表达式值最小的参数w和b
+
+
+
+与最小二乘估计殊途同归的是最大似然估计。似然可以理解为**某个参数取特定值的可能性**，极大似然估计则是通过寻找可能性的最大值点，找到最有可能的参数值。两者为何殊途同归可以参考[南瓜书的视频P2](https://www.bilibili.com/video/BV1Mh411e7VU/?p=2&vd_source=fbee134f28f10053951823e9c44f4191)
+
+
+
+## 一元线性回归闭式解的向量化
+
+参考南瓜书，利用NumPy等线性代数库加速，对之前推导的一元线性回归闭式解进行向量化
+
+此前推导的一元线性回归闭式解
+$$
+w = \frac {\sum_{i = 1}^m y_i (x_i - \bar x)}{\sum_{i=1}^m x_i^2 - \frac 1 m (\sum_{i = 1}^mx_i)^2}
+\newline
+b = \frac 1 m \sum_{i = 1}^m(y_i - wx_i)
+$$
+这个解中的求和运算只能使用循环实现（事实上吴恩达老师上一小节的notebook里就是用循环实现的），我们需要进一步向向量化靠拢。
+
+已知形如$\sum x_iy_i$的求和可以被表示为向量$x$和$y$的点乘，或者表示为类似$x^Ty$的形式。进行凑配
+$$
+w = \frac {\sum_{i = 1}^m y_i (x_i - \bar x)}{\sum_{i=1}^m x_i^2 - \frac 1 m (\sum_{i = 1}^mx_i)^2}
+\newline
+= \frac {\sum_{i = 1}^m y_i (x_i - \bar x)}{\sum_{i=1}^m x_i^2 - \bar x \sum_{i = 1}^mx_i}
+\newline
+= \frac {\sum_{i = 1}^m y_i (x_i - \bar x)}{\sum_{i=1}^m (x_i^2 - \bar x x_i)}
+\newline
+\because 
+\left.\begin{array}{}
+\sum_{i=1}^m \bar x x_i = \sum_{i=1}^m x_i \bar x = m\bar x^2 = \sum_{i=1}^m \bar x^2\\
+\sum_{i = 1}^m y_i \bar x = \sum_{i = 1}^m x_i \bar y = m\bar x \bar y =\sum_{i = 1}^m \bar x \bar y
+\end{array}\right.
+\newline
+\therefore
+w = \frac {\sum_{i = 1}^m (x_iy_i - \bar x y_i - x_i\bar y + \bar x \bar y)}{\sum_{i=1}^m (x_i^2 - \bar x x_i - x_i\bar x + \bar x^2)}
+\newline
+=\frac {\sum_{i = 1}^m (x_i - \bar x)(y_i - \bar y)}{\sum_{i=1}^m (x_i - \bar x)^2}
+\newline
+令\ x_d = (x_1 - \bar x, x_2 - \bar x, \dots, x_n - \bar x), y_d = (y_1 - \bar y, y_2 - \bar y, \dots, y_n - \bar y)
+\newline
+w = \frac{x_d^T y_d}{x_d^T x_d}
+$$
+
+
+下面尝试编程实现，测试计算$\bar a$与$a_d$
+
+```py
+>>> import numpy as np
+>>> a = np.arange(10); print(a)
+[0 1 2 3 4 5 6 7 8 9]
+>>> a_bar = a.mean(); print(a_bar)
+4.5
+>>> a_d = a - a_bar; print(a_d)
+[-4.5 -3.5 -2.5 -1.5 -0.5  0.5  1.5  2.5  3.5  4.5]
+```
+
+根据闭式解直接求得结果
+
+```py
+>>> # init parameters
+... b = 0
+>>> w = 0
+>>> # set data
+... x = np.arange(10); print(f'x = {x}')
+x = [0 1 2 3 4 5 6 7 8 9]
+>>> y = np.arange(5, 15); print(f'y = {y}')
+y = [ 5  6  7  8  9 10 11 12 13 14]
+>>> x_bar = x.mean()
+>>> y_bar = y.mean()
+>>> x_d = x - x_bar
+>>> y_d = y - y_bar
+>>> w =  np.dot(x_d, y_d)/ np.dot(x_d, x_d)
+>>> b = (y - w*x).mean()
+>>> print(w, b)
+1.0 5.0
+```
+
+> 在这里强调一下，闭式解是可以直接根据表达式求得参数的，例如这里直接求得了w和b，**没有进行梯度下降**等方法去拟合一个模型来预测。正如南瓜书所说，机器学习算法很少有闭式解，线性回归是个特例。
