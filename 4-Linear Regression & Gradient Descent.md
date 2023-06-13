@@ -20,13 +20,13 @@ $$
 
 还是房价的那个例子，给出一系列房屋大小-房价的数据，绘图（plot）
 
-![image-20230512160028918](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230512160028918.png)
+![image-20230512160028918](.\4-Linear Regression.assets\image-20230512160028918.png)
 
 
 
 也可以绘制Data table
 
-![image-20230512160301990](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230512160301990.png)
+![image-20230512160301990](.\4-Linear Regression.assets\image-20230512160301990.png)
 
 
 
@@ -43,7 +43,7 @@ $$
 
 # Linear Regression with One Variable
 
-![image-20230526193948648](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230526193948648.png)
+![image-20230526193948648](.\4-Linear Regression.assets\image-20230526193948648.png)
 
 如图，在监督式学习中，学习算法使用训练集学习出一个Model（或者说是一种函数），这个model接受x输入，并预测y的值，记$\hat y$；
 
@@ -76,7 +76,7 @@ $$
 
 在回归任务中，我们的目标是让成本函数最小化，如下图
 
-![image-20230601112942351](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230601112942351.png)
+![image-20230601112942351](.\4-Linear Regression.assets\image-20230601112942351.png)
 
 
 
@@ -84,7 +84,7 @@ $$
 
 对每个特定的w（fixed w），绘制$f_w(x)$并计算对应的$J(w)$值，可以绘制如下曲线
 
-![image-20230601113447469](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230601113447469.png)
+![image-20230601113447469](.\4-Linear Regression.assets\image-20230601113447469.png)
 
 以上是对一元损失函数的直观可视化
 
@@ -94,9 +94,9 @@ $$
 
 上面展示了损失函数随着w一个参数的变化，接下来，对w和b进行综合考虑。即J(w, b)，使用等高线图或者3维视图绘制如下
 
-![image-20230602184014602](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230602184014602.png)
+![image-20230602184014602](.\4-Linear Regression.assets\image-20230602184014602.png)
 
-![image-20230602184023657](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230602184023657.png)
+![image-20230602184023657](.\4-Linear Regression.assets\image-20230602184023657.png)
 
 可以看到，函数表面呈“碗形”，存在最低点对应的(w, b)，使得损失最小。
 
@@ -106,7 +106,7 @@ $$
 
 # Gradient Descent
 
-![image-20230604074037460](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230604074037460.png)
+![image-20230604074037460](.\4-Linear Regression.assets\image-20230604074037460.png)
 
 如图所示，从直观上理解梯度下降，就是在每一步选择当前下降最快的那个方向走一步，最终到达一个局部最低点的过程。
 
@@ -137,7 +137,7 @@ $$
 
 进一步从图像角度上来解释梯度下降为什么有效，如图，在仅考虑w或仅考虑b的情况下，从某个初始值开始进行梯度下降，该点的导数为切线斜率，斜率可正可负，计算结果表现为向最低点移动。
 
-![image-20230604081006192](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230604081006192.png)
+![image-20230604081006192](.\4-Linear Regression.assets\image-20230604081006192.png)
 
 
 
@@ -145,7 +145,7 @@ $$
 
 继续对学习率进行深入理解。不合适的学习率可能会导致无法梯度下降，如下图所示。当学习率过低的时候，导数乘一个非常小的学习率，因此每次下降的步长非常小，虽然可以获得最低成本，但耗时会非常的长；当学习率过高的时候，步长会过大，冲过最低点，甚至使成本更高，最终导致无法收敛（converge）。
 
-![image-20230606092232087](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230606092232087.png)
+![image-20230606092232087](.\4-Linear Regression.assets\image-20230606092232087.png)
 
 
 
@@ -193,17 +193,17 @@ Batch之外还有其他的算法，每次使用训练集的一个子集（Subset
 
 对单个参数，可以使用函数曲线进行可视化
 
-![image-20230607111006004](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230607111006004.png)
+![image-20230607111006004](.\4-Linear Regression.assets\image-20230607111006004.png)
 
 如果想要同时表示两个参数，可以使用“箭头图”。箭头的大小反映导数大小；箭头的方向表示了该点两个导数的比值。
 
-![image-20230607111042328](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230607111042328.png)
+![image-20230607111042328](.\4-Linear Regression.assets\image-20230607111042328.png)
 
 
 
 # 运行梯度下降
 
-![image-20230607112055005](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230607112055005.png)
+![image-20230607112055005](.\4-Linear Regression.assets\image-20230607112055005.png)
 
 
 
@@ -217,13 +217,13 @@ Batch之外还有其他的算法，每次使用训练集的一个子集（Subset
 
 成本应该一致下降，并且先快后慢。
 
-![image-20230607113403789](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230607113403789.png)
+![image-20230607113403789](.\4-Linear Regression.assets\image-20230607113403789.png)
 
 
 
 绘制等高线图来查看随着w和b以及成本的变化。
 
-![image-20230607114209249](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230607114209249.png)
+![image-20230607114209249](.\4-Linear Regression.assets\image-20230607114209249.png)
 
 
 
@@ -239,7 +239,7 @@ Batch之外还有其他的算法，每次使用训练集的一个子集（Subset
 
 如果学习率过大，会使梯度下降冲过最低点，且导致不能收敛的情况。
 
-![image-20230607120205086](D:\CS\Machine Learning\4-Linear Regression.assets\image-20230607120205086.png)
+![image-20230607120205086](.\4-Linear Regression.assets\image-20230607120205086.png)
 
 
 
@@ -266,7 +266,7 @@ $$
 
 换个直观点的说法就是，区间内任意两点，其割线在函数曲线的上方，类似下图
 
-![image-20230607144758127](D:\CS\Machine Learning\4-Linear Regression & Gradient Descent.assets\image-20230607144758127.png)
+![image-20230607144758127](.\4-Linear Regression & Gradient Descent.assets\image-20230607144758127.png)
 
 
 
