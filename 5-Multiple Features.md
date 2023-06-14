@@ -387,7 +387,52 @@ numpy.reshape(a, newshape, order={'C', 'F', 'A'})
 
 
 
-## Gradient & Hessian Matrix
+
+
+## Multiple Variables Linear Prediction
+
+多元线性模型的向量表示如下
+$$
+f_{w, b} = \vec w \cdot \vec x + b
+$$
+在代码中的实现
+
+```py
+import numpy as np
+f_wb = np.dot(w, x) + b
+```
+
+
+
+
+
+## Cost function
+
+多元线性模型的损失函数可以表示为
+$$
+J(\vec w, b) = \frac 1 {2m} \sum_{i = 0}^{m-1} (f_{w, b}(\vec x_i) - y_i)^2
+\newline
+= \frac 1 {2m} \sum_{i = 0}^{m-1} (\vec w \cdot \vec x_i + b - y_i)^2
+$$
+其中，$\vec x_i$代表第i行数据，是一个向量。
+
+在代码中的实现（使用loop）
+
+```py
+# X: 2darray, 存放数据的2D数组，每行为一个数据
+# y: 1darray, 存放target，是一个1D数组
+import numpy as np
+def dompute_cost(X, y, w, b):
+    cost = 0.0f
+	for i in range(X.shape[0]): # 遍历每个数据
+    	f_wb = np.dot(X[i], w) + b
+    	cost = cost + (f_wb - y[i])**2
+	cost /= (2*m)
+```
+
+
+
+## Compute Gradient
 
 梯度的严格定义是多元函数的一阶导数。设$n$元函数$f(x)$对自变量$x = (x_1, x_2, ..., x_n)^T$各分量$x_i$的偏导数$\frac {\part f(x)}{\part x_i}$都存在，称函数$f(x)$对$x$一阶可导，向量
 $$
@@ -402,16 +447,153 @@ $$
 
 
 
-多元函数的二阶导数称为Hessian矩阵。设$n$元函数$f(x)$对自变量$x = (x_1, x_2, ..., x_n)^T$各分量$x_i$的二阶偏导数$\frac {\part^2 f(x)}{\part x_i \part x_j}$都存在，称函数$f(x)$对$x$二阶可导，矩阵
+在多元线性回归中，梯度的计算可以表示为
 $$
-\nabla f(x) = \left[\begin{array}{}
-\frac {\part^2 f(x)}{\part x_1^2} & \frac {\part^2 f(x)}{\part x_1 \part x_2} & \dots & \frac {\part^2 f(x)}{\part x_1 \part x_n} \\
-\frac {\part^2 f(x)}{\part x_2 \part x_1} & \frac {\part^2 f(x)}{\part x_2^2} & \dots & \frac {\part^2 f(x)}{\part x_2 \part x_n} \\
-\vdots & \vdots & \ddots & \vdots\\
-\frac {\part^2 f(x)}{\part x_n \part x_1} & \frac {\part^2 f(x)}{\part x_n \part x_2} & \dots & \frac {\part^2 f(x)}{\part x_n^2} 
-\end{array}\right]
+\frac {\part J(\vec w, b)}{\part w_j} = \frac 1 m \sum_{i = 0}^{m-1} (f_{w, b}(\vec x_i) - y_i)x_{i, j}
+\newline
+\frac {\part J(\vec w, b)}{\part b} = \frac 1 m \sum_{i = 0}^{m-1} (f_{w, b}(\vec x_i) - y_i)
 $$
-为$f(x)$对x的二阶导数或Hessian矩阵。
+其中$error =  (f_{w, b}(\vec x_i) - y_i)$是公共项，可以在计算每个样例的时候复用。
 
 
+
+代码实现如下
+
+```py
+def compute_gradient(X, y, w, b):
+    m, n = X.shape
+    dj_dw = np.zeros((n,))
+    dj_db = 0.0f
+    
+    for i in range(m):
+        err = np.dot(X[i], w) + b - y[i]
+        # 累加每个dj_jw
+        for j in range(n):
+            dj_dw += err * x[i, j]
+        # 累加dj_db
+        dj_db += err
+    # 求均值
+    dj_dw /= m
+    dj_db /= m
+    return dj_db, dj_dw
+
+```
+
+
+
+
+
+## Gradient Descent
+
+多元梯度下降的数学表达式可以表示为
+$$
+w_j = w_j - \alpha \frac {\part J(\vec w, b)}{\part w_j}, j = 0, \dots, n-1
+\newline
+b = b - \alpha \frac {\part J(\vec w, b)}{\part b}
+$$
+迭代上式直到拟合。
+
+
+
+代码实现
+
+```py
+def gradient_descent(X, y, w_init, b_init, cost_function, gradient_function, alpha, num_iter):
+    w = copy.deepcopy(w_in) # 深拷贝w_in，避免修改原始变量
+    b = b_in
+    
+    for i in range(num_iters):
+    	dj_db, dj_dw = gradient_funciton(X, y, w, b)
+   		w -= alpha * dj_dw
+    	b -= alpha * dj_db
+    return w, b
+```
+
+
+
+
+
+# Feature Scaling
+
+## Background
+
+在上一个lab中，我们尝试实现了多元梯度下降，但模型的训练结果并不理想，经过1000轮迭代后，绘制cost曲线如下
+
+![image-20230614162530527](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230614162530527.png)
+
+模型远没有拟合，且预测值与目标值差异很大。这是由于特征尺度不同所导致的。
+
+对多元梯度下降，不同的特征会有不同的取值范围，例如在房屋价格预测模型中，房屋的面积范围可能是[200, 3000]，而房屋的卧室数范围可能是[0, 5]，两者的度量尺度存在很大的差异。
+
+![image-20230614162833673](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230614162833673.png)
+
+如图所示，当两个特征之间的度量尺度存在很大差异的时候，会导致两者cost函数的等高线图呈**椭圆形（contour）**；在图中的例子里，房屋大小对应的参数$w_1$只需要轻微变化，就能很大程度影响预测值，而卧室数量对应的参数$w_2$则需要移动很大的步长才能对预测值产生明显影响。最终导致梯度下降在椭圆较瘦的方向上反复跳动，降低学习效率。
+
+避免这种问题，可以采用特征缩放，调整（rescale）不同特征的尺度。例如全都缩放到[0, 1]，使得两者在可以相互比较的度量尺度（take on comparable range of values）内，等高线图呈近乎圆形。
+
+![image-20230614163550960](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230614163550960.png)
+
+> 总结一下，之所以使用特征缩放，原因有两个：
+>
+> 1. 防止范围过广的特征左右误差（距离）
+> 2. 加速梯度下降的收敛
+
+
+
+## Implement
+
+实现特征缩放有很多方法，例如**除阈值（Devide range），均值标准化（Mean normalization）**和**Z-score 标准化（Z-score normalization）**等。
+
+当数据存在下面几种特点的时候，应当进行缩放：
+
+- 值域太大，例如[-1000, 1000]
+- 值域太小，例如[-0.001, 0.001]
+- 基太大，例如[900, 1000]
+
+缩放后的数据范围应当接近[-1, 1]或[0, 1]。
+
+
+
+### Devide range
+
+数学表达式如下
+$$
+x_{j, scaled} = \frac {x_j} {\max - \min}
+$$
+
+
+### Mean normalization
+
+首先计算均值$\mu_j$，然后用误差除值域
+$$
+x_j = \frac {x_j - \mu_j}{\max - \min}
+$$
+
+
+### Z-score normalization
+
+计算标准分数（Standard Score），又称z-score，经过该变换的样本值通常在$\pm5$或$\pm 6$之间。
+
+标准分数的计算如下
+$$
+z = \frac {x - \mu} \sigma
+$$
+其中，$\mu$为均值，$\sigma$为标准差。
+
+> 这里其实有个挺细节的点：计算Z值需要的是总体的均值和标准差，而不是样本均值和标准差。而总体通常是没有办法度量的，因此通常会使用随机样本来评估，此时标准分数为
+> $$
+> z = \frac {x - \bar x} {S}
+> $$
+
+
+
+### 向量标准化
+
+将特征向量整体变为单位向量（即除以向量长度）
+$$
+x = \frac x {||x||}
+$$
+
+
+# Checking Convergence
 
