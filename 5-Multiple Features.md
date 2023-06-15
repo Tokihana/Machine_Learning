@@ -377,7 +377,27 @@ numpy.reshape(a, newshape, order={'C', 'F', 'A'})
 
 
 
+# 数据集初步观察
 
+对拿到的数据集，可以先绘制每个特征与目标值之间的关系图，例如，对一个房屋价格预测模型，有4个特征(size, bedrooms, floors, age)，通过matplotlib绘图
+
+```py
+import matplotlib.pyplot as plt
+# load dataset
+X_train, y_train = load_house_data()
+X_features = ['size(sqft)','bedrooms','floors','age']
+# plotting each feature versus price
+fig,ax=plt.subplots(1, 4, figsize=(12, 3), sharey=True)
+for i in range(len(ax)):
+    ax[i].scatter(X_train[:,i],y_train)
+    ax[i].set_xlabel(X_features[i])
+ax[0].set_ylabel("Price (1000's)")
+plt.show()
+```
+
+![features versus price](D:\CS\Machine Learning\5-Multiple Features.assets\features versus price.png)
+
+如上，可以粗略观察到，房屋的面积和价格呈正相关。新房屋通常比旧房屋价格高。而卧室数量和层数没有看出明显影响。
 
 # Gradient Descent for Multiple Regression
 
@@ -597,3 +617,24 @@ $$
 
 # Checking Convergence
 
+通过学习分辨什么是运行良好的梯度下降，从而选择更好的学习率。
+
+- 绘制**迭代次数（iterations）/损失函数$J(\vec w, b)$图像**，是**学习曲线（Learning curve）**的一种；如果梯度下降运行正常，损失函数应当一直下降；若出现上升，可能是因为bug或者$\alpha$太大；同时，曲线应当逐渐变平（逐渐收敛），通过图像可以很方便地找到拟合位置，确定何时完成训练
+
+  ![image-20230615115019636](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230615115019636.png)
+
+- 使用自动收敛判断（Autimatic convergence test）。令$\varepsilon$为一个极小值，例如$10^{-3}$，若某一次梯度下降中成本的减少量$\le \varepsilon$，则认为模型收敛。当然，这种方法要求选择合适的$\varepsilon$，且不如画图直观。
+
+
+
+# Choosing the Learning Rate
+
+![image-20230615120223309](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230615120223309.png)
+
+如图所示，当损失函数图像出现上下抖动，或者成本不断增高的时候（**本质上是成本没有下降**）；可能是由于代码编写错误或者学习率过高导致的。区分究竟是$\alpha$的问题，还是代码编写错了，可以先将$\alpha$设为一个极小值，看看修改后损失函数会不会正常下降。如果不会的话，通常是代码编写错了。
+
+> 注意：这里设一个非常非常小的$\alpha$是为了辨别错误类型。过小的$\alpha$也会是梯度下降过慢，增加迭代开销。
+
+在开始训练一个新的模型的时候，可以先设置一组不同量级的学习率，例如`alphas = [0.001, 0.01, 0.1, 1]`，使用每个学习率运行少量迭代数，并绘制成本函数。从而选择快速且始终保持下降的学习率。重点是要找到$\alpha$过小和过大的边界，如图所示；并选择尽可能大的学习率。
+
+![image-20230615121012138](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230615121012138.png)
