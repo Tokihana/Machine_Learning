@@ -560,7 +560,15 @@ def gradient_descent(X, y, w_init, b_init, cost_function, gradient_function, alp
 
 
 
-## Implement
+下图是从数学表达式上理解为什么需要缩放特征，因为w参数的更新量需要乘对应的特征值，因此在每个参数的$\alpha$相同的情况下，特征值较大的参数变化就更大。例如，房屋大小的特征值普遍大于1000，而床位数通常在2-4之间，房屋大小的更新速度要比床位数快得多。
+
+![](D:\CS\Machine Learning\5-Multiple Features.assets\C1_W2_Lab06_scale.png)
+
+
+
+
+
+## Methods
 
 实现特征缩放有很多方法，例如**除阈值（Devide range），均值标准化（Mean normalization）**和**Z-score 标准化（Z-score normalization）**等。
 
@@ -615,6 +623,11 @@ x = \frac x {||x||}
 $$
 
 
+
+## Implement
+
+实现一下z-score标准化。**（TODO）**
+
 # Checking Convergence
 
 通过学习分辨什么是运行良好的梯度下降，从而选择更好的学习率。
@@ -638,3 +651,67 @@ $$
 在开始训练一个新的模型的时候，可以先设置一组不同量级的学习率，例如`alphas = [0.001, 0.01, 0.1, 1]`，使用每个学习率运行少量迭代数，并绘制成本函数。从而选择快速且始终保持下降的学习率。重点是要找到$\alpha$过小和过大的边界，如图所示；并选择尽可能大的学习率。
 
 ![image-20230615121012138](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230615121012138.png)
+
+
+
+为了能够直观观察是否收敛，我们可以像前面所学的那样，绘制“成本函数-迭代次数”的变化曲线，以及在“成本-参数”曲线中，标注梯度下降点的位置
+
+```py
+import numpy as np
+import matplotlib.pyplot as plt
+
+def plot_cost(X, y, hist):
+    '''
+    plot cost-iteration and cost-w[0] fig
+    
+    Arguments:
+    	X: np.ndarray: train examples in 2D array
+    	y: np.ndarray: target values in 1D array
+    	hist: dict: dict of iteration history
+    	hist["cost"] = []; hist["params"] = []; hist["grads"]=[]; hist["iter"]=[];
+    
+    Returns: nothing
+    '''
+    ws = np.array(p[0] for p in hist["params"]) # get w[0]s
+    rng = max(abs(ws[:, 0].min()), abs(ws[:,0].max())) # get range of ws
+    wr = np.linspace(-rng+0.27, rng+0.27, 20) # x axis for plot
+    cst = [compute_cost(X, y, np.array([wr[i], -32, -67, -1.46]), 221) for i in range(len(wr))] # compute cost of in wr range, with fixed parameters w_1, w_2, w_3
+    
+    fig, ax = plt.subplots(1, 2, figsize = (12, 3))
+    ax[0].plot(hist["iter"], hist["cost"]); 
+    ax[0].set_title("Cost vs Iteration")
+    ax[0].set_xlabel("iteration"); ax[0].set_ylabel("Cost") # plot cost vs iteration
+    
+    ax[1].plot(wr, cst); ax[1].set_title("Cost vs w[0]") # plot gradient descent direction
+    ax[1].set_xlabel("w[0]"); ax[1].set_ylabel("Cost")
+    ax[1].plot(ws[:0], hist["Cost"]) # plot cost vs w[0] bowl curve
+```
+
+> 因为这个函数只关注了4个特征中的一个，而其他的3个特征取了最优固定值，因此绘制出来的图像可能会有些错位。
+
+下面是一些不同学习率下的绘图结果
+
+$\alpha = 9.9e-7$
+
+![image-20230616110435613](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230616110435613.png)
+
+成本不降反增，且参数会越过(overshoot)最优值，不断上升。
+
+
+
+$\alpha = 9e-7$
+
+![image-20230616110554070](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230616110554070.png)
+
+成本能够正常下降，但参数仍然在震荡，虽然最终可以收敛，但效率会很差
+
+
+
+$\alpha = 1e-7$
+
+![image-20230616110705568](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230616110705568.png)
+
+成本能够正常下降，且参数不会越过最小值，这样收敛速度会快得多
+
+
+
