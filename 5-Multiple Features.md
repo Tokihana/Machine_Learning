@@ -613,6 +613,8 @@ $$
 > z = \frac {x - \bar x} {S}
 > $$
 
+> 另一个需要关注的点为，这里将特征值标准化为了标准正态分布，处理后的特征值，均值为0，标准差为1
+
 
 
 ### 向量标准化
@@ -626,7 +628,81 @@ $$
 
 ## Implement
 
-实现一下z-score标准化。**（TODO）**
+实现一下z-score标准化。
+
+首先计算均值和标准差
+$$
+\mu_j = \frac 1 m \sum_{i = 0}^{m - 1} x_j^{(i)}
+\newline
+\sigma_j^2 = \frac 1 m \sum_{i = 0}^{m - 1} (x_j^{(i)} - \mu_j)^2
+$$
+使用这两个测量值缩放输入
+$$
+x_j^{(i)} = \frac {x_j^{(i)} - \mu_j} {\sigma_j}
+$$
+
+> 注意：应当把均值和方差也一并存储下来，后面预测新值的时候再次用来标准化。
+
+
+
+NumPy提供了计算这些测量值的方法，可以直接调用
+
+```py
+import numpy as np
+
+def zscore_normalize(X):
+    '''
+    Compute zscore normalized X
+    Args:
+    	X (ndarray): Shape(m, n) input data, m examples, n features
+    	
+   	Returns:
+   		X_norm (ndarray): Shape(m, n) normalized X
+   		mu (ndarray): Shape(n, ) 	  mean of each feature
+   		sigma (ndarray): Shape(n,) 	  standard deviation of each feature
+    '''
+    mu = np.mean(X, axis = 0) # compute mean of each column
+    sigma = np.std(X, axis = 0) # compute standard deviation of each column
+    X_norm = (X - mu) / sigma # will be broadcast to each column
+    
+    return (X_norm, mu, sigma)
+```
+
+
+
+标准化的结果可以通过绘制散点图来观察
+
+![](D:\CS\Machine Learning\5-Multiple Features.assets\z_score_normalized_data.png)
+
+可以观察到，减去均值后，特征值会分布在0的周围；而除以标准差后，特征值会被缩放到较小的范围。
+
+
+
+也可以通过`np.ptp()`来观察极差的变化，`ptp`是peak to peak的缩写，即从一个极值到另一个极值。
+
+```py
+>>> # normalize the original features
+>>> X_norm, X_mu, X_sigma = zscore_normalize_features(X_train)
+>>> print(f"X_mu = {X_mu}, \nX_sigma = {X_sigma}")
+>>> print(f"Peak to Peak range by column in Raw        X:{np.ptp(X_train,axis=0)}")   
+>>> print(f"Peak to Peak range by column in Normalized X:{np.ptp(X_norm,axis=0)}")
+X_mu = [1.42e+03 2.72e+00 1.38e+00 3.84e+01], 
+X_sigma = [411.62   0.65   0.49  25.78]
+Peak to Peak range by column in Raw        X:[2.41e+03 4.00e+00 1.00e+00 9.50e+01]
+Peak to Peak range by column in Normalized X:[5.85 6.14 2.06 3.69]
+```
+
+
+
+## Cost Contour 
+
+通过绘制成本函数的等高线图，也可以观察到不同特征的阈值是否匹配
+
+![](D:\CS\Machine Learning\5-Multiple Features.assets\cost contour.png)
+
+如上图所示，在对数据进行标准化之前，特征值之间的阈值差异过大，甚至无法观察出图像是一个椭圆；而在进行标准化后，两个特征值之间的阈值更为接近，这会使得梯度下降时的步长更相似。
+
+
 
 # Checking Convergence
 
