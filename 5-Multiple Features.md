@@ -819,4 +819,180 @@ $$
 
 > 需要注意的是，当使用更高阶的函数时，特征的缩放就显得更为重要，因为高阶函数会进一步放大不同特征值之间的极差差距，导致下降步长不一致。
 
-具体如何选择特征，将在整个课程的第二部分进行讲解，现在先理解有多项式回归这个概念，以及通过特征设计和多项式回归，可以获得更贴近数据的模型，就可以了。
+
+
+## Simple quadratic
+
+首先考虑一个简单的非线性场景，设$y = 1 + x^2$
+
+使用前面的线性回归模型进行拟合
+
+```py
+# create target data
+x = np.arange(0, 20, 1)
+y = 1 + x**2
+X = x.reshape(-1, 1)
+
+model_w,model_b = run_gradient_descent_feng(X,y,iterations=1000, alpha = 1e-2)
+
+plt.scatter(x, y, marker='x', c='r', label="Actual Value"); plt.title("no feature engineering")
+plt.plot(x,X@model_w + model_b, label="Predicted Value");  plt.xlabel("X"); plt.ylabel("y"); plt.legend(); plt.show()
+```
+
+w,b found by gradient descent: w: [18.7], b: -52.0834
+
+![](D:\CS\Machine Learning\5-Multiple Features.assets\simple quadratic.png)
+
+
+
+很明显，函数不能很好地拟合，我们需要设计更为有效的特征值，例如尝试将x取平方
+
+```py
+# create target data
+x = np.arange(0, 20, 1)
+y = 1 + x**2
+
+# Engineer features 
+X = x**2      #<-- added engineered feature
+X = X.reshape(-1, 1)  #X should be a 2-D Matrix
+model_w,model_b = run_gradient_descent_feng(X, y, iterations=10000, alpha = 1e-5)
+
+plt.scatter(x, y, marker='x', c='r', label="Actual Value"); plt.title("Added x**2 feature")
+plt.plot(x, np.dot(X,model_w) + model_b, label="Predicted Value"); plt.xlabel("x"); plt.ylabel("y"); plt.legend(); plt.show()
+```
+
+w,b found by gradient descent: w: [1.], b: 0.0490
+
+![](D:\CS\Machine Learning\5-Multiple Features.assets\use squared feature.png)
+
+这一次，获得了十分接近target的拟合：$y = 0.0490 + x^2$。
+
+
+
+## Selecting Features
+
+在前面，我们讨论了一个简单的非线性模型的例子，接下来，我们要讨论如何选择合适的特征，因为很多时候，我们不能直观推断怎样的多项式特征更符合数据。
+
+选择特征的一种方法是**利用梯度下降对权重的分配**，根据权重的大小，可以判断出该特征对拟合的影响程度，从而选择合适的特征。
+
+我们以$y = w_0x_0 + w_1 x_1^2 + w_2 x_2^3 + b$和上面的数据集为例，分析使用梯度下降法选取特征的细节。
+
+
+
+### Feature scaling
+
+在进行梯度下降之前，我们需要先进行**特征缩放**，因为$x_0, x_1^2$和$x_2^3$明显具有不同的阈值，我们可以进行比较：
+
+```py
+# create target data
+x = np.arange(0,20,1)
+X = np.c_[x, x**2, x**3]
+print(f"Peak to Peak range by column in Raw        X:{np.ptp(X,axis=0)}")
+
+# add mean_normalization 
+X = zscore_normalize_features(X)     
+print(f"Peak to Peak range by column in Normalized X:{np.ptp(X,axis=0)}")
+```
+
+Peak to Peak range by column in Raw        X:[  19  361 6859]
+Peak to Peak range by column in Normalized X:[3.3  3.18 3.28]
+
+进行缩放后，特征阈值更加一致，梯度下降的效果会更好。
+
+> `np.c_[..]`用来将不同的列串联，或者按照[NumPy手册的说法](https://numpy.org/doc/stable/reference/generated/numpy.c_.html)，根据第二个轴（along the second axis）。
+>
+> 这个方法是`np.r_['-1, 2, 0', index expression]`的快捷写法，`numpy.r_`方法可以将切片对象转换为沿第一个轴的串联（c和r分别是column和row的简写）。两者都是用于快速构建数组的方法。在底层，它们都调用`self.concatenate(tuple(objs), axis = axis)`
+>
+> 所谓”串联“，实际上是将用逗号隔开的元素，按照指定的坐标轴，合并到同一个数组内，例如
+>
+> ```py
+> >>> np.r_[np.array([1,2,3]), 0, 0, np.array([4,5,6])]
+> array([1, 2, 3, ..., 4, 5, 6])
+> >>> np.c_[np.array([1,2,3]), np.array([4,5,6])]
+> array([[1, 4],
+>        [2, 5],
+>        [3, 6]])
+> ```
+>
+> 需要注意的是，串联的对应轴必须等长，例如将第二个改为
+>
+> ```py
+> >>> np.c_[np.array([1,2,3]),0 , np.array([4,5,6])] # 错误的写法，一定会报错
+> '''ValueError: all the input array dimensions except for the concatenation axis must match exactly'''
+> ```
+>
+> `np.r_`可以通过指定string integers来指定串联效果，这个字符串由三个逗号分隔的整数组成，分别指示要连接的轴，强制将输入转换的最小维度（即维度要大于等于该值，但这个值必须大于等于连接后的维度），以及哪个轴将包含数组的起始（这个数字必须低于维度）；例如
+>
+> ```py
+> >>> np.r_['0,2,0', [1,2,3], [4,5,6]]
+> array([[1],
+>        [2],
+>        [3],
+>        [4],
+>        [5],
+>        [6]])
+> >>> np.r_['0,1,0', [1,2,3], [4,5,6]]
+> array([1, 2, 3, 4, 5, 6])
+> >>> np.r_['1,2,0', [1,2,3], [4,5,6]]
+> array([[1, 4],
+>        [2, 5],
+>        [3, 6]])
+> >>> np.r_['1,2,1', [1,2,3], [4,5,6]]
+> array([[1, 2, 3, 4, 5, 6]])
+> ```
+
+
+
+### Gradient descent with non-linear feature
+
+使用缩放后的特征，执行梯度下降。因为已经经过了特征缩放，所以alpha可以设大一些。
+
+```py
+x = np.arange(0,20,1)
+y = x**2
+
+X = np.c_[x, x**2, x**3]
+X = zscore_normalize_features(X) 
+
+model_w, model_b = run_gradient_descent_feng(X, y, iterations=100000, alpha=1e-1)
+
+plt.scatter(x, y, marker='x', c='r', label="Actual Value"); plt.title("Normalized x x**2, x**3 feature")
+plt.plot(x,X@model_w + model_b, label="Predicted Value"); plt.xlabel("x"); plt.ylabel("y"); plt.legend(); plt.show()
+```
+
+> `@`做的是矩阵乘法运算
+
+w,b found by gradient descent: w: [5.27e-05 1.13e+02 8.43e-05], b: 123.5000
+
+![](D:\CS\Machine Learning\5-Multiple Features.assets\normalized polynomial feature.png)
+
+从权重的结果来看，$x^2$的影响比其他两个特征大得多，可以视为其他两个特征被淘汰。
+
+
+
+## An Alternate View
+
+从另一个视角来看特征选取，虽然我们使用了更高阶的特征，但抛开特征设计，我们使用的梯度下降方法仍然是线性回归的梯度下降方法，因此，当一个经过设计的特征适合数据的时候，该特征应当与目标值线性相关
+
+```py
+# create target data
+x = np.arange(0, 20, 1)
+y = x**2
+
+# engineer features .
+X = np.c_[x, x**2, x**3]   #<-- added engineered feature
+X_features = ['x','x^2','x^3']
+
+fig,ax=plt.subplots(1, 3, figsize=(12, 3), sharey=True)
+for i in range(len(ax)):
+    ax[i].scatter(X[:,i],y)
+    ax[i].set_xlabel(X_features[i])
+ax[0].set_ylabel("y")
+plt.show()
+```
+
+![](D:\CS\Machine Learning\5-Multiple Features.assets\An Alternate View.png)
+
+
+
+如图所示，可见特征$x^2$与目标值线性相关，因此应当选择该特征。
