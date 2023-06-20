@@ -454,7 +454,7 @@ def dompute_cost(X, y, w, b):
 
 ## Compute Gradient
 
-梯度的严格定义是多元函数的一阶导数。设$n$元函数$f(x)$对自变量$x = (x_1, x_2, ..., x_n)^T$各分量$x_i$的偏导数$\frac {\part f(x)}{\part x_i}$都存在，称函数$f(x)$对$x$一阶可导，向量
+梯度的严格定义是多元函数的一阶导数。设$n$元函数$f(x)$对自变量$x = (x_1, x_2, ..., x_n)^T$各分量$x_i$的偏导数$\frac {\partial f(x)}{\partial x_i}$都存在，称函数$f(x)$对$x$一阶可导，向量
 $$
 \nabla f(x) = \left[\begin{array}{}
 \frac {\part f(x)}{\part x_1}\\
@@ -996,3 +996,82 @@ plt.show()
 
 
 如图所示，可见特征$x^2$与目标值线性相关，因此应当选择该特征。
+
+
+
+# 西瓜书内容补充
+
+## 多元闭式解
+
+已知在一元线性回归中，有
+$$
+f(x_i) = w x_i + b\newline
+(w^*, b^*) = \arg \min_{(w, b)} \sum_{i = 1}^m (f(x_i) - y_i)^2
+$$
+$w^*, b^*$为$w, b$的解，对于多元线性回归，我们试图获得
+$$
+f(\vec x_i) = \vec w^T \vec x_i + b，使得f(\vec x_i)\simeq y_i
+$$
+类似的，我们可以写出解的形式
+$$
+(\vec w^*, b^*) =  \arg \min_{(\vec w, b)} \sum_{i = 1}^m (f(\vec x_i) - y_i)^2
+\newline
+= \arg \min_{(\vec w, b)} \sum_{i = 1}^m (\vec w^T \vec x_i + b - y_i)^2
+$$
+为了使计算更加简便，可以令
+$$
+\hat {\vec w} = (\vec w; b) = (w_1, w_2, \dots, w_n, b)
+\newline
+对应的，\matrix X = \left(
+\begin{array}{}
+x_{11} & x_{12} & \cdots & x_{1n} & 1 \\
+x_{21} & x_{22} & \cdots & x_{2n} & 1 \\
+\vdots & \vdots & \ddots & \vdots & \vdots \\
+x_{m1} & x_{m2} & \cdots & x_{mn} & 1
+\end{array}
+\right)
+$$
+则有
+$$
+\hat {\vec w}^* = \arg\min_{\hat {\vec w}} (\matrix X \hat {\vec w} - \vec y)^T(\matrix X \hat {\vec w} - \vec y)
+$$
+令$E_{\hat {\vec w}} = (\matrix X \hat {\vec w} - \vec y)^T(\matrix X \hat {\vec w} - \vec y)$，则对$\hat {\vec w}$求导
+$$
+\frac {\partial E_{\hat {\vec w}}}{\partial \hat {\vec w}} = 
+\frac {\partial \vec y^T \vec y}{\partial \hat {\vec w}} 
+- \frac {\partial \vec y^T \matrix X \hat {\vec w}}{\partial \hat {\vec w}} 
+- \frac {\partial \hat {\vec w}^T \matrix X^T \vec y  }{\partial \hat {\vec w}} 
++ \frac {\partial \hat {\vec w}^T \matrix X^T \matrix X \hat {\vec w} }{\partial \hat {\vec w}}
+
+\newline \because
+\frac {\partial \alpha^T \vec x}{\partial \vec x} = \frac {\partial \vec x^T \alpha}{\partial \vec x} = \alpha
+\newline 
+\frac {\partial \vec x^T \matrix A \vec x}{\partial \vec x} = (\matrix A + \matrix A^T)\vec x
+
+\newline \therefore
+\frac {\partial E_{\hat {\vec w}}}{\partial \hat {\vec w}} = 
+0 - \matrix X^T \vec y - \matrix X^T \vec y + (\matrix X^T \matrix X + \matrix X^T \matrix X)\hat {\vec w}
+\newline = 2\matrix X^T(\matrix X \hat {\vec w} - \vec y)
+$$
+令该式为0，可得$\hat {\vec w}^*$的闭式解。
+
+
+
+## 广义线性模型（generalized linear model）
+
+通常的线性模型可以简写为
+$$
+y = \vec w^T \vec x + b
+$$
+如果让线性模型逼近y的衍生函数，例如，让y呈指数变化，可以写为
+$$
+\ln y = \vec w^T \vec x + b
+$$
+即让$e^{\vec w^T \vec x + b}$逼近$y$，上面这种回归称为**对数线性回归（log-linear regression）**，类似这样的，考虑单调可微的**联系函数（link function）**$g(\cdot)$，使得
+$$
+y = g^{-1}(\vec w^T \vec x + b)
+$$
+这样的模型称为**广义线性模型（generalized linear model）**
+
+> 或者按照吴恩达老师所讲的理解思路，广义线性模型就是我们试图寻找一个$g(\cdot)$，使得$y$与$g(\vec w^T \vec x + b)$线性相关。
+
