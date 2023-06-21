@@ -10,6 +10,21 @@
 
 
 
+## Multiple features
+
+分类问题的特征也可以是多元的，不同的输出值通常用不同图标表示，例如
+
+```py
+x_train = np.array([0., 1, 2, 3, 4, 5])
+y_train = np.array([0,  0, 0, 1, 1, 1])
+X_train2 = np.array([[0.5, 1.5], [1,1], [1.5, 0.5], [3, 0.5], [2, 2], [1, 2.5]])
+y_train2 = np.array([0, 0, 0, 1, 1, 1])
+```
+
+![multiple_features](D:\CS\Machine Learning\7-Classification.assets\multiple_features.png)
+
+
+
 # Logistic Regression
 
 ## From unit step to Logistic
@@ -50,7 +65,38 @@ $$
 
 
 
-# Logistic的由来
+## Implement Logistic Function
+
+使用[`np.exp()`](https://numpy.org/doc/stable/reference/generated/numpy.exp.html)来实现对率函数
+
+```py
+def sigmoid(z):
+    """
+    Compute the sigmoid of z
+
+    Args:
+        z (ndarray): A scalar, numpy array of any size.
+
+    Returns:
+        g (ndarray): sigmoid(z), with the same shape as z
+         
+    """
+    
+    z = np.clip( z, -500, 500 )           # protect against overflow
+    g = 1/(1+np.exp(-z))
+   
+    return g
+```
+
+> `np.exp()`既可以接收单个值，也可以接收一个向量，并对向量中的每个元素求指数。
+
+
+
+
+
+## Why "Logistic"?
+
+> 这里讨论名称由来是为了强化记忆，和主要内容关联性不大，可以跳过
 
 logistic这个名称具有很大的迷惑性，西瓜书将其翻译为“对数几率函数”，也有人觉得这个词来源于logic，因此翻译为“逻辑函数”。从函数定义上来看
 $$
@@ -62,4 +108,66 @@ $$
 
 根据参考文献[1]("D:\CS\Machine Learning\阅读材料\MathAlive.pdf")，我们可以找到一些线索，显示出logistic这个名字，很可能来取自“log-like"，而在当时那个时期，所谓的”对数曲线（logarithm curve）“，其实是现在通称的指数曲线；即，提出该函数的作者，可能是想表达该函数在一定区间内，具有”类似指数函数“的性质，因此命名为”logistic function"。如图所示。
 
-<img src="D:\CS\Machine Learning\7-Classification.assets\Courbe_logistique,_Verhulst,_1845.png" alt="Courbe_logistique,_Verhulst,_1845" style="zoom:50%;" />
+<img src="D:\CS\Machine Learning\7-Classification.assets\Courbe_logistique,_Verhulst,_1845.png" alt="Courbe_logistique,_Verhulst,_1845" style="zoom: 33%;" />
+
+
+
+而西瓜书翻译为对数几率，则是根据
+$$
+y = \frac {1} {1 + e^{-(\vec w^T \vec x + b)}}
+\newline
+\rightarrow \ln \frac {y} {1-y} = \vec w^T \vec x + b
+$$
+设$y$为二分类问题中，样本取正例的可能性（probability），$\frac y {1-y}$即为正例与反例可能性的比值，称为**几率（odds）**，再加一个$\ln$，称**对数几率（log odds, 也做logit）**。
+
+
+
+# Decision boundary
+
+在对率回归模型中，通常假定$g(z) = 0.5$为模型的决策边界。
+
+![](D:\CS\Machine Learning\7-Classification.assets\sigmoid_funciton.png)
+
+如图所示，$g(z) = 0.5$，代表$z = 0$，而$z$对应线性模型$\vec w \vec x + b$，因此有
+$$
+\vec w \vec x + b \geq 0, y = 1
+\newline
+\vec w \vec x + b < 0, y = 0
+$$
+
+
+此时，$z = \vec w \vec x + b = 0$构成一个边界（在二元的情况下，这个边界是一条曲线），分割了两种不同的类别。
+
+以一个简单的数据集为例
+
+```py
+X = np.array([[0.5, 1.5], [1,1], [1.5, 0.5], [3, 0.5], [2, 2], [1, 2.5]])
+y = np.array([0, 0, 0, 1, 1, 1]).reshape(-1,1) 
+```
+
+![](D:\CS\Machine Learning\7-Classification.assets\simple_data.png)
+
+
+
+假设通过经过学习后，我们获得了参数 $b = -3, w_0 = 1, w_1 = 1$，则对率回归模型为
+$$
+f(x) = g(x_0+x_1-3)
+$$
+模型的边界为$x_0 + x_1 - 3 = 0$，整理后进行绘图
+
+![](D:\CS\Machine Learning\7-Classification.assets\decision_boundary.png)
+
+如图，位于蓝色区域的点，将被预测为$y = 0$，而位于白色区域的点，则被预测为$y = 1$，蓝色直线就是模型的决策边界
+
+
+
+决策边界同样可以是非线性的(non-linear)，利用我们此前学到的特征设计和多项式回归，我们可以绘制出更加复杂的决策边界，例如
+
+![image-20230621164547290](D:\CS\Machine Learning\7-Classification.assets\image-20230621164547290.png)
+
+
+
+# Loss Function
+
+
+
