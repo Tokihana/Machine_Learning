@@ -91,6 +91,7 @@ def plt_logistic_cost(X,y):
     ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
     ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
 
+    plt.savefig('./pictures/cost.png')
     plt.show()
     return cost
 
@@ -186,4 +187,5 @@ def plt_two_logistic_loss_curves():
                    arrowprops={'arrowstyle': '->', 'color': dlorange, 'lw': 3},)
     plt.suptitle("Loss Curves for Two Categorical Target Values", fontsize=12)
     plt.tight_layout()
+    plt.savefig('./pictures/two_catagiries_logistic.png')
     plt.show()

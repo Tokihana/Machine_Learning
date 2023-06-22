@@ -169,5 +169,81 @@ $$
 
 # Loss Function
 
+## Definitions
+
+首先明确下Loss和Cost的定义，吴恩达老师在课程中对这两个词的定义为：
+
+- Loss：单个样例的预测值与结果只之间的差异
+- Cost：整个训练集的Loss
+
+后面为了消歧义，会采用英文表述
 
 
+
+## Squared Error Loss
+
+在此前的线性回归中，我们使用平方误差（Squared error）作为Loss函数，表达式为
+$$
+Loss(f_{\vec w, b}(\vec x_i), y_i) = (f_{\vec w, b}(\vec x_i) - y_i)^2
+\newline
+其中，f_{\vec w, b}(\vec x_i) = \vec w^T\vec x + b
+$$
+Cost函数写作
+$$
+J(\vec w, b) = \frac 1 {2m} \sum_{i = 0}^{m - 1} (f_{\vec w, b}(\vec x_i) - y_i)^2
+$$
+在线性回归中，该函数是凸函数，我们对Cost求偏导，调整参数移动到局部最低点。
+
+
+
+对于对率回归任务，我们很自然地想尝试用同样的Cost函数。为了确定平方误差Cost是否适用于对率回归，我们可以绘图观察
+$$
+J(\vec w, b) = \frac 1 {2m} \sum_{i = 0}^{m - 1} (f_{\vec w, b}(\vec x_i) - y_i)^2
+\newline
+f_{\vec w, b}(\vec x_i) = logistic(\vec w^T\vec x + b)
+$$
+![](D:\CS\Machine Learning\7-Classification.assets\logistic_squared_error.png)
+
+很明显，这个函数不是个凸（Convex）函数，存在非常多的局部最低点，不适合梯度下降。
+
+> 实际上，Logistic regression是可以使用最小二乘的，不过不能用这种经典的最小二乘（或者叫普通最小二乘，Ordinary least squares），而应该使用加权最小二乘（weighted least squares）。详见[wiki](hhttps://en.wikipedia.org/wiki/Logistic_regression#Model_fitting)。不过一般还是用极大似然估计。
+
+
+
+## Likelihood Loss
+
+定义似然函数（Likelihood function）为
+$$
+Loss(f_{\vec w, b}(\vec x_i), y_i) = 
+\left\{
+\begin{array}{}
+-\log(f_{\vec w, b}(\vec x_i)), y_i = 1\\
+-\log(1 - f_{\vec w, b}(\vec x_i)), y_i = 0
+\end{array}
+\right.
+$$
+绘制其曲线
+
+![](D:\CS\Machine Learning\7-Classification.assets\two_catagiries_logistic.png)
+
+可以看到，该函数能够满足Loss函数的行为：当预测值接近目标值的时候，逼近0，当预测值远离目标值的时候，快速增大。从而在远处快速下降，逼近时下降减慢。
+
+
+
+为了方便实现，可以将上式重写为
+$$
+Loss(f_{\vec w, b}(\vec x_i), y_i) = -y_i \log(f_{\vec w, b}(\vec x_i)) - (1 - y_i) \log(1 - f_{\vec w, b}(\vec x_i))
+$$
+因为$y_i$只会取0或1，所以该式与上式等价；从而得到Cost表达式
+$$
+J(\vec w, b) = \frac 1 m \sum_{i = 1}^m Loss(f_{\vec w, b}(\vec x_i), y_i)
+$$
+计算Cost并绘制图像
+
+![](D:\CS\Machine Learning\7-Classification.assets\cost.png)
+
+左图是cost，右图是取log之后的cost。图像非常平滑且是个凸曲面，可以通过梯度下降拟合参数。
+
+> 不清楚这里为什么取log，前面取log应该是为了连乘变连加，方便计算的同时防止因多个(0, 1)内的概率相乘导致浮点下溢。
+>
+> 之所以能够取对数是因为单调性相同，能够取到同一个最大似然点
