@@ -53,6 +53,7 @@ g(z) = \frac 1 {1 + e^{-z}}, 0 < g(z) < 1
 $$
 
 
+
 ## Logistic Regression
 
 通过上面的讨论，以及[多元线性回归](5-Multiple Features.md)中对特征设计与广义线性模型的讨论，我们可以定义出使用对数几率回归：
@@ -206,7 +207,7 @@ $$
 
 很明显，这个函数不是个凸（Convex）函数，存在非常多的局部最低点，不适合梯度下降。
 
-> 实际上，Logistic regression是可以使用最小二乘的，不过不能用这种经典的最小二乘（或者叫普通最小二乘，Ordinary least squares），而应该使用加权最小二乘（weighted least squares）。详见[wiki](hhttps://en.wikipedia.org/wiki/Logistic_regression#Model_fitting)。不过一般还是用极大似然估计。
+> 实际上，Logistic regression是可以使用最小二乘的，不过不能用这种经典的最小二乘（或者叫普通最小二乘，Ordinary least squares），而应该使用加权最小二乘（weighted least squares）。详见[wiki](hhttps://en.wikipedia.org/wiki/Logistic_regression#Model_fitting)。不过一般还是用**极大似然估计（Maximum Likelihood Estimation）**。
 
 
 
@@ -222,13 +223,45 @@ Loss(f_{\vec w, b}(\vec x_i), y_i) =
 \end{array}
 \right.
 $$
+> 这里用的极大似然（MLE），大致参考西瓜书做些说明：
+>
+> 对数据集$D$，$D_c$表示其中类别为$c$的样本集合，在本课程的二分类任务中，这个集合被划分为$y = 1$与$y = 0$两类。概率分别为
+> $$
+> p(y = 1|\vec x) = f_{\vec w, b}(\vec x) =\frac 1 {1 + e^{-(\vec w^T \vec x + b)}} = \frac {e^{\vec w^T \vec x + b}} {1 + e^{\vec w^T \vec x + b}}
+> \newline
+> p(y = 0|\vec x) = 1 - p(y = 1|\vec x) = \frac 1 {1 + e^{\vec w^T \vec x + b}}
+> $$
+> 假设样本独立同分布（iid），得联合分布（同时发生的概率）
+> $$
+> P(D_{y=1}|\vec w, b) = \prod_{\vec x_i \in D_{y = 1}}f_{\vec w, b}(\vec x_i)
+> \newline
+> P(D_{y=0}|\vec w, b) = \prod_{\vec x_i \in D_{y = 1}}(1 - f_{\vec w, b}(\vec x_i))
+> $$
+> 称似然函数（likelihood function），可以想到，当似然函数最大化的时候，样本为真实标记的概率最大，联合分布最符合数据集的情况，使得似然函数最大的$\vec w, b$就是最优参数解，即
+> $$
+> \hat{\vec w}, \hat b = \arg \max_{\vec w, b} P(D_c|\vec w, b)
+> $$
+> 由于概率取值范围为[0, 1]，上式中的连乘操作易造成浮点数下溢，因此通常对似然取对数，即对数自然（log-likelihood），提取单个样例的Loss为
+> $$
+> Loss(f_{\vec w, b}(\vec x_i), y_i) = 
+> \left\{
+> \begin{array}{}
+> -\log(f_{\vec w, b}(\vec x_i)), y_i = 1\\
+> -\log(1 - f_{\vec w, b}(\vec x_i)), y_i = 0
+> \end{array}
+> \right.
+> $$
+> 这里加符号是为了后面梯度下降做极小化。
+
+
+
 绘制其曲线
 
 ![](D:\CS\Machine Learning\7-Classification.assets\two_catagiries_logistic.png)
 
 可以看到，该函数能够满足Loss函数的行为：当预测值接近目标值的时候，逼近0，当预测值远离目标值的时候，快速增大。从而在远处快速下降，逼近时下降减慢。
 
-
+# Cost function
 
 为了方便实现，可以将上式重写为
 $$
@@ -237,6 +270,8 @@ $$
 因为$y_i$只会取0或1，所以该式与上式等价；从而得到Cost表达式
 $$
 J(\vec w, b) = \frac 1 m \sum_{i = 1}^m Loss(f_{\vec w, b}(\vec x_i), y_i)
+\newline
+= -\frac 1 m \sum_{i = 1}^m y_i \log(f_{\vec w, b}(\vec x_i)) + (1 - y_i) \log(1 - f_{\vec w, b}(\vec x_i))
 $$
 计算Cost并绘制图像
 
@@ -244,6 +279,98 @@ $$
 
 左图是cost，右图是取log之后的cost。图像非常平滑且是个凸曲面，可以通过梯度下降拟合参数。
 
-> 不清楚这里为什么取log，前面取log应该是为了连乘变连加，方便计算的同时防止因多个(0, 1)内的概率相乘导致浮点下溢。
+> 前面取log是为了连乘变连加，方便计算的同时防止因多个(0, 1)内的概率相乘导致浮点下溢。这里取log是为了将数据压缩到较小的区间，从而在可视化的时候可以更好地观察差异。
 >
 > 之所以能够取对数是因为单调性相同，能够取到同一个最大似然点
+
+
+
+## Implement
+
+实现`compute_cost_logistic`函数
+
+```py
+import numpy as np
+def compute_cost_logistic(X, y, w, b):
+    """
+    Computes cost
+
+    Args:
+      X (ndarray (m,n)): Data, m examples with n features
+      y (ndarray (m,)) : target values
+      w (ndarray (n,)) : model parameters  
+      b (scalar)       : model parameter
+      
+    Returns:
+      cost (scalar): cost
+    """
+
+    m = X.shape[0]
+    cost = 0.0
+    for i in range(m):
+        z_i = np.dot(X[i],w) + b
+        f_wb_i = sigmoid(z_i)
+        cost +=  -y[i]*np.log(f_wb_i) - (1-y[i])*np.log(1-f_wb_i)
+             
+    cost = cost / m
+    return cost
+```
+
+
+
+# Gradient Descent
+
+## Partial derivatives
+
+已知Cost
+$$
+J(\vec w, b)
+= -\frac 1 m \sum_{i = 1}^m y_i \log(f_{\vec w, b}(\vec x_i)) + (1 - y_i) \log(1 - f_{\vec w, b}(\vec x_i))
+$$
+求解偏导，首先计算$g(z) = \frac 1 {1 + e^{-z}}$的导数
+$$
+g'(z) = \frac 1 {(1 + e^{-z})^2}e^{-z} = g(z)(1 - g(z))
+$$
+求取$\vec w$偏导
+$$
+\frac \partial {\partial \vec w_j}J(\vec w, b) = \frac \partial {\partial \vec w_j} -\frac 1 m \sum_{i = 1}^m y_i \log(f_{\vec w, b}(\vec x_i)) + (1 - y_i) \log(1 - f_{\vec w, b}(\vec x_i))
+$$
+分别推导两部分的导数
+$$
+\frac \partial {\partial \vec w_j} y \log(f_{\vec w, b}(\vec x)) 
+= y * \frac 1 {f_{\vec w, b}(\vec x)}*f'_{\vec w, b}(\vec x) \frac \partial {\partial \vec w_j}(\vec w^T\vec x + b)
+\newline
+= y * \frac 1 {f_{\vec w, b}(\vec x)} * f_{\vec w, b}(\vec x)(1-f_{\vec w, b}(\vec x)) * \vec x_j
+\newline
+= y*(1-f_{\vec w, b}(\vec x))\vec x_j
+\newline
+\frac \partial {\partial \vec w_j}(1 - y)log(1 - f_{\vec w, b}(\vec x))
+= (1 - y) * \frac 1 {1 - f_{\vec w, b}(\vec x)} * (-f'_{\vec w, b}(\vec x))\frac \partial {\partial \vec w_j}(\vec w^T \vec x + b)
+\newline
+= (1 - y) * \frac 1 {1 - f_{\vec w, b}(\vec x)} * -(f_{\vec w, b}(\vec x)(1-f_{\vec w, b}(\vec x)))  * \vec x_j
+\newline 
+= (y - 1) f_{\vec w, b}(\vec x) \vec x_j
+$$
+整理得
+$$
+\frac \partial {\partial \vec w_j}J(\vec w, b)
+= \frac 1 m \sum_{i = 1}^m(f_{\vec w, b}(\vec x_i) - y_i) \vec x_{i, j}
+$$
+
+
+同理，求$b$偏导（去掉$\vec x_{i, j}$即可）
+$$
+\frac \partial {\partial b}J(\vec w, b) = \frac 1 m \sum_{i = 1}^m(f_{\vec w, b}(\vec x_i) - y_i)
+$$
+
+
+从而得出梯度下降迭代式
+$$
+w_j = w_j - \alpha[\frac 1 m \sum_{i = 1}^m(f_{\vec w, b}(\vec x_i) - y_i) \vec x_{i, j}]
+\newline
+b = b - \alpha[\frac 1 m \sum_{i = 1}^m(f_{\vec w, b}(\vec x_i) - y_i)]
+$$
+与线性回归中应用梯度下降一样，参数需要同步更新（synchronous update），需要关注模型是否收敛，可以使用向量化加速计算，使用特征缩放来调整特征。
+
+
+
