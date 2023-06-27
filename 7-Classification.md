@@ -374,3 +374,100 @@ $$
 
 
 
+## Implement - compute gradient
+
+首先计算梯度，伪码逻辑如下
+
+```py
+for each example i:
+	error = f_wb(X[i]) - y_i   
+    for each feature j:
+        dj_dw[j] += error * X[i][j]
+    dj_db += error
+    
+dj_dw /= m
+dj_db /= m
+```
+
+具体实现
+
+```py
+def compute_gradient_logistic(X, y, w, b): 
+    """
+    Computes the gradient for linear regression 
+ 
+    Args:
+      X (ndarray (m,n): Data, m examples with n features
+      y (ndarray (m,)): target values
+      w (ndarray (n,)): model parameters  
+      b (scalar)      : model parameter
+    Returns
+      dj_dw (ndarray (n,)): The gradient of the cost w.r.t. the parameters w. 
+      dj_db (scalar)      : The gradient of the cost w.r.t. the parameter b. 
+    """
+    m,n = X.shape
+    dj_dw = np.zeros((n,))                           #(n,)
+    dj_db = 0.
+
+    for i in range(m):
+        f_wb_i = sigmoid(np.dot(X[i],w) + b)          #(n,)(n,)=scalar
+        err_i  = f_wb_i  - y[i]                       #scalar
+        for j in range(n):
+            dj_dw[j] = dj_dw[j] + err_i * X[i,j]      #scalar
+        dj_db = dj_db + err_i
+    dj_dw = dj_dw/m                                   #(n,)
+    dj_db = dj_db/m                                   #scalar
+        
+    return dj_db, dj_dw 
+```
+
+
+
+## Implement - Gradient descent
+
+```py
+def gradient_descent(X, y, w_in, b_in, alpha, num_iters): 
+    """
+    Performs batch gradient descent
+    
+    Args:
+      X (ndarray (m,n)   : Data, m examples with n features
+      y (ndarray (m,))   : target values
+      w_in (ndarray (n,)): Initial values of model parameters  
+      b_in (scalar)      : Initial values of model parameter
+      alpha (float)      : Learning rate
+      num_iters (scalar) : number of iterations to run gradient descent
+      
+    Returns:
+      w (ndarray (n,))   : Updated values of parameters
+      b (scalar)         : Updated value of parameter 
+    """
+    w = copy.deepcopy(w_in)  #avoid modifying global w within function
+    b = b_in
+    
+    for i in range(num_iters):
+        # Calculate the gradient and update the parameters
+        dj_db, dj_dw = compute_gradient_logistic(X, y, w, b)   
+
+        # Update Parameters using w, b, alpha and gradient
+        w = w - alpha * dj_dw               
+        b = b - alpha * dj_db               
+        
+    return w, b        #return final w,b and J history for graphing
+
+```
+
+
+
+下图为在一元二分类任务中运行梯度下降的结果
+
+![image-20230627093950895](D:\CS\Machine Learning\7-Classification.assets\image-20230627093950895.png)
+
+
+
+# 参考
+
+- 吴恩达2022《机器学习》
+- 《机器学习》周志华
+- 南瓜书
+- 《数理统计学导论》Robert V.Hogg, Joseph W.McKean
