@@ -54,6 +54,8 @@ $$
 
 ## Regularized Linear Regression
 
+### Equations
+
 已知引入正则化之后的cost
 $$
 J(\vec w, b) =\frac 1 {2m} \sum_{i = 1}^m (f_{\vec w, b}(\vec x_i) - y_i)^2 + \frac \lambda {2m} \sum_{j = 1}^n w_j^2
@@ -80,7 +82,72 @@ $$
 
 
 
+### Implements
+
+首先实现Cost的计算
+
+```py
+def compute_cost_linear_reg(X, y, w, b, lambda_ = 1):
+	'''
+	Computes total cost of all examples
+	Args:
+		X (ndarray (m, n)): Data, m examples, n features
+		y (ndarray (m, )): target values
+		w (ndarray (n, ))： parameters
+		b (scalar) : interpret parameter
+		lambda_ (scalar) : the amout of regularization, add "_" to distinguish from key word "lambda"
+		
+    Returns:
+    	total_cost (scalar): the total cost of all examples
+    '''
+    m, n = X.shape
+    errors = np.dot(X, w) + b - y
+    cost = (1/2/m) * np.dot(errors, errors) + (lambda_/2/m) * np.dot(w, w)
+    return cost
+```
+
+> `np.dot(a,b)`算法支持多种支持多种运算规则，在这里`np.dot(X, w)`相当于对w做一次线性变换。需要注意的是，这种计算方式是会进行广播（broadcast）的。当`a, b`都是1-D array的时候，计算向量内积。
+>
+> `np.matmul(x1,x2)`，或者说运算符`@`提供矩阵乘法，要求shape满足*(n,k),(k,m)->(n,m)*。`x1, x2`不能是scalar或array；虽然用`np.dot`也可实现这一运算，但推荐使用`@`。
+>
+> `np.multiply(a, b)`或者说运算符`*`提供数乘操作，要求任意一个输入为scalar。同样可以用`np.dot`实现，但推荐使用`*`。
+
+
+
+梯度下降函数不会因为引入正则项发生变化，但计算梯度的函数需要做出调整
+
+```py
+def compute_gradient_linear_reg(X, y, w, b, lambda_): 
+    """
+    Computes the gradient for linear regression 
+    Args:
+      X (ndarray (m,n): Data, m examples with n features
+      y (ndarray (m,)): target values
+      w (ndarray (n,)): model parameters  
+      b (scalar)      : model parameter
+      lambda_ (scalar): Controls amount of regularization
+      
+    Returns:
+      dj_dw (ndarray (n,)): The gradient of the cost w.r.t. the parameters w. 
+      dj_db (scalar):       The gradient of the cost w.r.t. the parameter b. 
+    """
+    m,n = X.shape           #(number of examples, number of features)
+
+    errors = np.dot(X, w) + b - y
+    dj_db = errors.mean()
+    dj_dw = np.dot(errors.reshape(1, -1), X).reshape(-1, )/m + (lambda_/m) * w
+    # 或者这样写也可以，但是逻辑上会变成(m, ) dot (m, n)，
+    # 虽然numpy会自动修正过来，但最好先reshape
+    # dj_dw = np.dot(errors, X)/m + (lambda_/m) * w
+    
+    return dj_db, dj_dw
+```
+
+
+
 ## Regularized Logistic Regression
+
+### Equations
 
 同理，在对率回归中引入$L_2$范数项
 $$
@@ -104,4 +171,68 @@ $$
 > | None    | 0                                      |
 > | $l_1$   | $||w||_1$                              |
 > | $l_2$   | $\frac 1 2 ||w||^2_2 = \frac 1 2 w^Tw$ |
+
+
+
+### Implements
+
+计算cost
+
+```py
+def compute_cost_logistic_reg(X, y, w, b, lambda_ = 1):
+    """
+    Computes the cost over all examples
+    Args:
+    Args:
+      X (ndarray (m,n): Data, m examples with n features
+      y (ndarray (m,)): target values
+      w (ndarray (n,)): model parameters  
+      b (scalar)      : model parameter
+      lambda_ (scalar): Controls amount of regularization
+    Returns:
+      total_cost (scalar):  cost 
+    """
+
+    m,n  = X.shape
+    reg_cost = (lambda_/2/m) * np.dot(w, w)
+    f_wbs = sigmoid(np.dot(X, w) + b)
+    cost = -(np.dot(y, np.log(f_wbs)) + np.dot(1-y, np.log(1-f_wbs)))/m                                                 #scalar
+
+    total_cost = cost + reg_cost
+    return total_cost
+```
+
+> sigmoid函数在此前实现过，核心代码为
+>
+> ```py
+> g = 1.0/(1.0+np.exp(-z))
+> ```
+
+
+
+计算梯度
+
+```py
+def compute_gradient_logistic_reg(X, y, w, b, lambda_): 
+    """
+    Computes the gradient for linear regression 
+ 
+    Args:
+      X (ndarray (m,n): Data, m examples with n features
+      y (ndarray (m,)): target values
+      w (ndarray (n,)): model parameters  
+      b (scalar)      : model parameter
+      lambda_ (scalar): Controls amount of regularization
+    Returns
+      dj_dw (ndarray Shape (n,)): The gradient of the cost w.r.t. the parameters w. 
+      dj_db (scalar)            : The gradient of the cost w.r.t. the parameter b. 
+    """
+    m,n = X.shape
+
+    errors = sigmoid(np.dot(X, w) + b) - y
+    dj_db = errors.mean()
+    dj_dw = np.dot(errors.reshape(1, -1), X).reshape(-1, )/m + (lambda_/m) * w
+
+    return dj_db, dj_dw  
+```
 
