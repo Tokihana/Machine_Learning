@@ -4,9 +4,9 @@
 
 以识别恶性肿瘤为例，$y$只会取“是”或“否”两个值，属于**二分类问题（binary classification)**，通常对两个分类取值0和1，或者true和false。如图所示，使用线性回归，会使得分界线（在这个例子中，分界线为$y = 0.5$），或者称决策边界（decision boundary）发生偏移。
 
-<img src="D:\CS\Machine Learning\7-Classification.assets\image-20230620120000511.png" alt="image-20230620120000511" style="zoom:67%;" />
+<img src=".\7-Classification.assets\image-20230620120000511.png" alt="image-20230620120000511" style="zoom:67%;" />
 
-<img src="D:\CS\Machine Learning\7-Classification.assets\image-20230620115930554.png" alt="image-20230620115930554" style="zoom: 67%;" />
+<img src=".\7-Classification.assets\image-20230620115930554.png" alt="image-20230620115930554" style="zoom: 67%;" />
 
 
 
@@ -21,7 +21,7 @@ X_train2 = np.array([[0.5, 1.5], [1,1], [1.5, 0.5], [3, 0.5], [2, 2], [1, 2.5]])
 y_train2 = np.array([0, 0, 0, 1, 1, 1])
 ```
 
-![multiple_features](D:\CS\Machine Learning\7-Classification.assets\multiple_features.png)
+![multiple_features](.\7-Classification.assets\multiple_features.png)
 
 
 
@@ -39,11 +39,11 @@ H(x) =
 \end{array}
 \right.
 $$
-![](D:\CS\Machine Learning\7-Classification.assets\unit step function.png)
+![](.\7-Classification.assets\unit step function.png)
 
 但这个函数不连续，所以只能考虑寻找一个近似的、单调可微的替代函数（surrogate function）。替代函数应当能够拟合一条S形曲线（S-shaped curve），如图
 
-![image-20230620173827287](D:\CS\Machine Learning\7-Classification.assets\image-20230620173827287.png)
+![image-20230620173827287](.\7-Classification.assets\image-20230620173827287.png)
 
 
 
@@ -107,9 +107,9 @@ $$
 
 
 
-根据参考文献[1]("D:\CS\Machine Learning\阅读材料\MathAlive.pdf")，我们可以找到一些线索，显示出logistic这个名字，很可能来取自“log-like"，而在当时那个时期，所谓的”对数曲线（logarithm curve）“，其实是现在通称的指数曲线；即，提出该函数的作者，可能是想表达该函数在一定区间内，具有”类似指数函数“的性质，因此命名为”logistic function"。如图所示。
+根据参考文献[1](".\阅读材料\MathAlive.pdf")，我们可以找到一些线索，显示出logistic这个名字，很可能来取自“log-like"，而在当时那个时期，所谓的”对数曲线（logarithm curve）“，其实是现在通称的指数曲线；即，提出该函数的作者，可能是想表达该函数在一定区间内，具有”类似指数函数“的性质，因此命名为”logistic function"。如图所示。
 
-<img src="D:\CS\Machine Learning\7-Classification.assets\Courbe_logistique,_Verhulst,_1845.png" alt="Courbe_logistique,_Verhulst,_1845" style="zoom: 33%;" />
+<img src=".\7-Classification.assets\Courbe_logistique,_Verhulst,_1845.png" alt="Courbe_logistique,_Verhulst,_1845" style="zoom: 33%;" />
 
 
 
@@ -127,7 +127,7 @@ $$
 
 在对率回归模型中，通常假定$g(z) = 0.5$为模型的决策边界。
 
-![](D:\CS\Machine Learning\7-Classification.assets\sigmoid_funciton.png)
+![](.\7-Classification.assets\sigmoid_funciton.png)
 
 如图所示，$g(z) = 0.5$，代表$z = 0$，而$z$对应线性模型$\vec w \vec x + b$，因此有
 $$
@@ -146,7 +146,7 @@ X = np.array([[0.5, 1.5], [1,1], [1.5, 0.5], [3, 0.5], [2, 2], [1, 2.5]])
 y = np.array([0, 0, 0, 1, 1, 1]).reshape(-1,1) 
 ```
 
-![](D:\CS\Machine Learning\7-Classification.assets\simple_data.png)
+![](.\7-Classification.assets\simple_data.png)
 
 
 
@@ -156,7 +156,7 @@ f(x) = g(x_0+x_1-3)
 $$
 模型的边界为$x_0 + x_1 - 3 = 0$，整理后进行绘图
 
-![](D:\CS\Machine Learning\7-Classification.assets\decision_boundary.png)
+![](.\7-Classification.assets\decision_boundary.png)
 
 如图，位于蓝色区域的点，将被预测为$y = 0$，而位于白色区域的点，则被预测为$y = 1$，蓝色直线就是模型的决策边界
 
@@ -164,7 +164,7 @@ $$
 
 决策边界同样可以是非线性的(non-linear)，利用我们此前学到的特征设计和多项式回归，我们可以绘制出更加复杂的决策边界，例如
 
-![image-20230621164547290](D:\CS\Machine Learning\7-Classification.assets\image-20230621164547290.png)
+![image-20230621164547290](.\7-Classification.assets\image-20230621164547290.png)
 
 
 
@@ -203,7 +203,7 @@ J(\vec w, b) = \frac 1 {2m} \sum_{i = 0}^{m - 1} (f_{\vec w, b}(\vec x_i) - y_i)
 \newline
 f_{\vec w, b}(\vec x_i) = logistic(\vec w^T\vec x + b)
 $$
-![](D:\CS\Machine Learning\7-Classification.assets\logistic_squared_error.png)
+![](.\7-Classification.assets\logistic_squared_error.png)
 
 很明显，这个函数不是个凸（Convex）函数，存在非常多的局部最低点，不适合梯度下降。
 
@@ -257,7 +257,7 @@ $$
 
 绘制其曲线
 
-![](D:\CS\Machine Learning\7-Classification.assets\two_catagiries_logistic.png)
+![](.\7-Classification.assets\two_catagiries_logistic.png)
 
 可以看到，该函数能够满足Loss函数的行为：当预测值接近目标值的时候，逼近0，当预测值远离目标值的时候，快速增大。从而在远处快速下降，逼近时下降减慢。
 
@@ -275,7 +275,7 @@ J(\vec w, b) = \frac 1 m \sum_{i = 1}^m Loss(f_{\vec w, b}(\vec x_i), y_i)
 $$
 计算Cost并绘制图像
 
-![](D:\CS\Machine Learning\7-Classification.assets\cost.png)
+![](.\7-Classification.assets\cost.png)
 
 左图是cost，右图是取log之后的cost。图像非常平滑且是个凸曲面，可以通过梯度下降拟合参数。
 
@@ -461,7 +461,13 @@ def gradient_descent(X, y, w_in, b_in, alpha, num_iters):
 
 下图为在一元二分类任务中运行梯度下降的结果
 
-![image-20230627093950895](D:\CS\Machine Learning\7-Classification.assets\image-20230627093950895.png)
+![image-20230627093950895](.\7-Classification.assets\image-20230627093950895.png)
+
+
+
+# Predict的一些注意事项
+
+实现对率回归的predict函数，可以直接用sigmoid求出概率后舍入。但是这里有个小细节需要注意，numpy的`round`函数采用的舍入规则是**银行舍入**，x.5会被舍入到距离最近的偶数上。且numpy没有提供方法来选择舍入规则。对某些情况，例如医学检测上，我们通常期望0.5被舍入到1，宁可错检，也不应放过可能的隐患，此时调整为`np.ceil(logistics - 0.5)`更好一些。
 
 
 

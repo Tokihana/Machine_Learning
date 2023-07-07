@@ -48,7 +48,7 @@ $$
 
 设有如下参数
 
-![image-20230610172121447](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230610172121447.png)
+![image-20230610172121447](.\5-Multiple Features.assets\image-20230610172121447.png)
 
 在Numpy中，可以这样表示
 
@@ -78,11 +78,11 @@ f_wb = np.dot(w, x) + b
 
 当采用loop实现方法的时候，程序会顺序执行每个`f += w[i] * x[i]`
 
-![image-20230610173009248](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230610173009248.png)
+![image-20230610173009248](.\5-Multiple Features.assets\image-20230610173009248.png)
 
 而在向量化实现中，计算机可以同时并行计算多个`w[i] * x[i]`
 
-![image-20230610173051049](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230610173051049.png)
+![image-20230610173051049](.\5-Multiple Features.assets\image-20230610173051049.png)
 
 以上是使用线性代数库计算性能的直观表示
 
@@ -395,7 +395,7 @@ ax[0].set_ylabel("Price (1000's)")
 plt.show()
 ```
 
-![features versus price](D:\CS\Machine Learning\5-Multiple Features.assets\features versus price.png)
+![features versus price](.\5-Multiple Features.assets\features versus price.png)
 
 如上，可以粗略观察到，房屋的面积和价格呈正相关。新房屋通常比旧房屋价格高。而卧室数量和层数没有看出明显影响。
 
@@ -403,7 +403,7 @@ plt.show()
 
 类似单元线性回归，多元线性回归需要迭代更新$w_i$和$b$，从而最小化损失函数
 
-![image-20230613112418935](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230613112418935.png)
+![image-20230613112418935](.\5-Multiple Features.assets\image-20230613112418935.png)
 
 
 
@@ -539,19 +539,19 @@ def gradient_descent(X, y, w_init, b_init, cost_function, gradient_function, alp
 
 在上一个lab中，我们尝试实现了多元梯度下降，但模型的训练结果并不理想，经过1000轮迭代后，绘制cost曲线如下
 
-![image-20230614162530527](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230614162530527.png)
+![image-20230614162530527](.\5-Multiple Features.assets\image-20230614162530527.png)
 
 模型远没有拟合，且预测值与目标值差异很大。这是由于特征尺度不同所导致的。
 
 对多元梯度下降，不同的特征会有不同的取值范围，例如在房屋价格预测模型中，房屋的面积范围可能是[200, 3000]，而房屋的卧室数范围可能是[0, 5]，两者的度量尺度存在很大的差异。
 
-![image-20230614162833673](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230614162833673.png)
+![image-20230614162833673](.\5-Multiple Features.assets\image-20230614162833673.png)
 
 如图所示，当两个特征之间的度量尺度存在很大差异的时候，会导致两者cost函数的等高线图呈**椭圆形（contour）**；在图中的例子里，房屋大小对应的参数$w_1$只需要轻微变化，就能很大程度影响预测值，而卧室数量对应的参数$w_2$则需要移动很大的步长才能对预测值产生明显影响。最终导致梯度下降在椭圆较瘦的方向上反复跳动，降低学习效率。
 
 避免这种问题，可以采用特征缩放，调整（rescale）不同特征的尺度。例如全都缩放到[0, 1]，使得两者在可以相互比较的度量尺度（take on comparable range of values）内，等高线图呈近乎圆形。
 
-![image-20230614163550960](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230614163550960.png)
+![image-20230614163550960](.\5-Multiple Features.assets\image-20230614163550960.png)
 
 > 总结一下，之所以使用特征缩放，原因有两个：
 >
@@ -562,7 +562,7 @@ def gradient_descent(X, y, w_init, b_init, cost_function, gradient_function, alp
 
 下图是从数学表达式上理解为什么需要缩放特征，因为w参数的更新量需要乘对应的特征值，因此在每个参数的$\alpha$相同的情况下，特征值较大的参数变化就更大。例如，房屋大小的特征值普遍大于1000，而床位数通常在2-4之间，房屋大小的更新速度要比床位数快得多。
 
-![](D:\CS\Machine Learning\5-Multiple Features.assets\C1_W2_Lab06_scale.png)
+![](.\5-Multiple Features.assets\C1_W2_Lab06_scale.png)
 
 
 
@@ -672,7 +672,7 @@ def zscore_normalize(X):
 
 标准化的结果可以通过绘制散点图来观察
 
-![](D:\CS\Machine Learning\5-Multiple Features.assets\z_score_normalized_data.png)
+![](.\5-Multiple Features.assets\z_score_normalized_data.png)
 
 可以观察到，减去均值后，特征值会分布在0的周围；而除以标准差后，特征值会被缩放到较小的范围。
 
@@ -698,7 +698,7 @@ Peak to Peak range by column in Normalized X:[5.85 6.14 2.06 3.69]
 
 通过绘制成本函数的等高线图，也可以观察到不同特征的阈值是否匹配
 
-![](D:\CS\Machine Learning\5-Multiple Features.assets\cost contour.png)
+![](.\5-Multiple Features.assets\cost contour.png)
 
 如上图所示，在对数据进行标准化之前，特征值之间的阈值差异过大，甚至无法观察出图像是一个椭圆；而在进行标准化后，两个特征值之间的阈值更为接近，这会使得梯度下降时的步长更相似。
 
@@ -710,7 +710,7 @@ Peak to Peak range by column in Normalized X:[5.85 6.14 2.06 3.69]
 
 - 绘制**迭代次数（iterations）/损失函数$J(\vec w, b)$图像**，是**学习曲线（Learning curve）**的一种；如果梯度下降运行正常，损失函数应当一直下降；若出现上升，可能是因为bug或者$\alpha$太大；同时，曲线应当逐渐变平（逐渐收敛），通过图像可以很方便地找到拟合位置，确定何时完成训练
 
-  ![image-20230615115019636](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230615115019636.png)
+  ![image-20230615115019636](.\5-Multiple Features.assets\image-20230615115019636.png)
 
 - 使用自动收敛判断（Autimatic convergence test）。令$\varepsilon$为一个极小值，例如$10^{-3}$，若某一次梯度下降中成本的减少量$\le \varepsilon$，则认为模型收敛。当然，这种方法要求选择合适的$\varepsilon$，且不如画图直观。
 
@@ -718,7 +718,7 @@ Peak to Peak range by column in Normalized X:[5.85 6.14 2.06 3.69]
 
 # Choosing the Learning Rate
 
-![image-20230615120223309](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230615120223309.png)
+![image-20230615120223309](.\5-Multiple Features.assets\image-20230615120223309.png)
 
 如图所示，当损失函数图像出现上下抖动，或者成本不断增高的时候（**本质上是成本没有下降**）；可能是由于代码编写错误或者学习率过高导致的。区分究竟是$\alpha$的问题，还是代码编写错了，可以先将$\alpha$设为一个极小值，看看修改后损失函数会不会正常下降。如果不会的话，通常是代码编写错了。
 
@@ -726,7 +726,7 @@ Peak to Peak range by column in Normalized X:[5.85 6.14 2.06 3.69]
 
 在开始训练一个新的模型的时候，可以先设置一组不同量级的学习率，例如`alphas = [0.001, 0.01, 0.1, 1]`，使用每个学习率运行少量迭代数，并绘制成本函数。从而选择快速且始终保持下降的学习率。重点是要找到$\alpha$过小和过大的边界，如图所示；并选择尽可能大的学习率。
 
-![image-20230615121012138](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230615121012138.png)
+![image-20230615121012138](.\5-Multiple Features.assets\image-20230615121012138.png)
 
 
 
@@ -769,7 +769,7 @@ def plot_cost(X, y, hist):
 
 $\alpha = 9.9e-7$
 
-![image-20230616110435613](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230616110435613.png)
+![image-20230616110435613](.\5-Multiple Features.assets\image-20230616110435613.png)
 
 成本不降反增，且参数会越过(overshoot)最优值，不断上升。
 
@@ -777,7 +777,7 @@ $\alpha = 9.9e-7$
 
 $\alpha = 9e-7$
 
-![image-20230616110554070](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230616110554070.png)
+![image-20230616110554070](.\5-Multiple Features.assets\image-20230616110554070.png)
 
 成本能够正常下降，但参数仍然在震荡，虽然最终可以收敛，但效率会很差
 
@@ -785,7 +785,7 @@ $\alpha = 9e-7$
 
 $\alpha = 1e-7$
 
-![image-20230616110705568](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230616110705568.png)
+![image-20230616110705568](.\5-Multiple Features.assets\image-20230616110705568.png)
 
 成本能够正常下降，且参数不会越过最小值，这样收敛速度会快得多
 
@@ -813,7 +813,7 @@ $$
 
 在某些情况下，线性模型可能不能完美地拟合我们的数据，例如下图的情况。
 
-![image-20230617173912631](D:\CS\Machine Learning\5-Multiple Features.assets\image-20230617173912631.png)
+![image-20230617173912631](.\5-Multiple Features.assets\image-20230617173912631.png)
 
 也许更高阶的函数能够更好地拟合这个数据（这部分有点数字信号处理的内容了，总之更高阶的函数能够更好拟合复杂图像）.
 
@@ -841,7 +841,7 @@ plt.plot(x,X@model_w + model_b, label="Predicted Value");  plt.xlabel("X"); plt.
 
 w,b found by gradient descent: w: [18.7], b: -52.0834
 
-![](D:\CS\Machine Learning\5-Multiple Features.assets\simple quadratic.png)
+![](.\5-Multiple Features.assets\simple quadratic.png)
 
 
 
@@ -863,7 +863,7 @@ plt.plot(x, np.dot(X,model_w) + model_b, label="Predicted Value"); plt.xlabel("x
 
 w,b found by gradient descent: w: [1.], b: 0.0490
 
-![](D:\CS\Machine Learning\5-Multiple Features.assets\use squared feature.png)
+![](.\5-Multiple Features.assets\use squared feature.png)
 
 这一次，获得了十分接近target的拟合：$y = 0.0490 + x^2$。
 
@@ -964,7 +964,7 @@ plt.plot(x,X@model_w + model_b, label="Predicted Value"); plt.xlabel("x"); plt.y
 
 w,b found by gradient descent: w: [5.27e-05 1.13e+02 8.43e-05], b: 123.5000
 
-![](D:\CS\Machine Learning\5-Multiple Features.assets\normalized polynomial feature.png)
+![](.\5-Multiple Features.assets\normalized polynomial feature.png)
 
 从权重的结果来看，$x^2$的影响比其他两个特征大得多，可以视为其他两个特征被淘汰。
 
@@ -991,7 +991,7 @@ ax[0].set_ylabel("y")
 plt.show()
 ```
 
-![](D:\CS\Machine Learning\5-Multiple Features.assets\An Alternate View.png)
+![](.\5-Multiple Features.assets\An Alternate View.png)
 
 
 

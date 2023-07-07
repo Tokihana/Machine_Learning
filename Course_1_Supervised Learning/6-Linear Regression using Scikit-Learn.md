@@ -240,7 +240,7 @@ y_pred_sgd = sgdr.predict(X_norm)
 
 预测结果与目标值比对
 
-![sgdr predict results](D:\CS\Machine Learning\6-Linear Regression using Scikit-Learn.assets\sgdr predict results.png)
+![sgdr predict results](.\6-Linear Regression using Scikit-Learn.assets\sgdr predict results.png)
 
 
 
@@ -353,4 +353,4 @@ plt.scatter(x, y, marker='x', c='r', label="Actual Value"); plt.title("x, x**2, 
 plt.plot(x, X@model_w + model_b, label="Predicted Value"); plt.xlabel("x"); plt.ylabel("y"); plt.legend(); plt.show()
 ```
 
-![](D:\CS\Machine Learning\6-Linear Regression using Scikit-Learn.assets\feature engineering and polynomial feature.png)
+![](.\6-Linear Regression using Scikit-Learn.assets\feature engineering and polynomial feature.png)
