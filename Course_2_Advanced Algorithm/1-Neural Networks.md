@@ -191,3 +191,169 @@ yhat = np.round(a2) # 可选步骤，对概率进行舍入
 
 # Data in TensorFlow
 
+TensorFlow和NumPy的数据格式可能有些地方不太一样，两者之间传递数据的时候记得做点转换。
+
+假设存在一个2行3列（$2 \times3$）的矩阵
+$$
+\left[
+\begin{array}{}
+1 & 2 & 3 \\
+4 & 5 & 6
+\end{array}
+\right]
+$$
+在NumPy中，下面这个的矩阵可以表示为
+
+```py
+X = np.array([[1, 2, 3],
+			 [4, 5, 6]])
+```
+
+
+
+比较容易混淆的是$1 \times n，n \times 1$的矩阵和向量
+
+```py
+>>> import numpy as np
+>>> X1 = np.array([[200, 70]]) # 1 x 2 矩阵
+>>> X2 = np.array([[200],
+...               [70]]) # 2 x 1 矩阵
+>>> x = np.array([200, 70]) # 含有2个元素的向量
+>>> print(X1.shape, X2.shape, x.shape)
+(1, 2) (2, 1) (2,)
+```
+
+
+
+在TensorFlow中，通常使用**矩阵**作为数据的表示形式，因为tf的设计目标是处理大规模数据。
+
+```py
+>>> layer_1 = tf.keras.layers.Dense(units = 2, activation = 'sigmoid')
+>>> a1 = layer_1(X1)
+>>> print(a1)
+tf.Tensor([[1. 1.]], shape=(1, 2), dtype=float32)
+>>> a1.numpy()
+array([[1., 1.]], dtype=float32)
+```
+
+`tf.Tensor`是TensorFlow的数据类型，是TensorFlow程序主要的操作和传递对象，包含两个属性：
+
+- 数据类型dtype。Tensor中所有元素的数据类型相同
+- shape。数组的形状。
+
+`.numpy()`方法提供了将Tensor数组转换为NumPy数组的方法，很常用。
+
+
+
+# Bulid Neural Network
+
+在之前我们实现forward propagation的方法是
+
+```py
+x = np.array([[200.0, 17.0]])
+layer_1 = Dense(units = 3, activation = 'sigmoid')
+a1 = layer_1(x)
+layer_2 = Dense(units = 1, activation = 'sigmoid')
+a2 = layer_2(a1)
+```
+
+
+
+该方法需要手动在层间传递数据（即通过变量赋值的方式传递数据），TensorFlow提供了方法`Sequential([])`，可以不用手动在层间传递数据，该方法将提供的一系列层进行线性串联，并提供模型的训练和推理功能。
+
+```py
+layer_1 = Dense(units = 3, activation = 'sigmoid')
+layer_2 = Dense(units = 1, activation = 'sigmoid')
+model = Sequential([layer_1, layer_2])
+
+'''或者写为
+model = Sequential([Dense(units = 3, activation = 'sigmoid'), 
+				  Dense(units = 1, activation = 'sigmoid')])
+'''
+# .add()方法用于添加新的层
+model.add(layer_1)
+
+model.compile(...) # 配置模型属性，还有个类似的方法叫.complie_from_config()
+				 # compile()的细节后面讲。
+model.fit(X, y) # 拟合模型
+model.predict(x_new) # 预测新的值
+```
+
+
+
+# Forward Prop in single layer
+
+通过自己实现前向传播，深入理解TensorFlow或者PyTorch框架中的代码逻辑，首先来实现烤咖啡豆例子中的网络
+
+![image-20230713162057450](D:\CS\Machine Learning\Course_2_Advanced Algorithm\1-Neural Networks.assets\image-20230713162057450.png)
+
+给出输入
+
+```python
+x = np.array([200, 17])
+```
+
+x是1D array
+
+
+
+在layer 1中，计算$\vec a$，记`wi_j`表示$w^{[i]}_j$，则`a1_1`的计算可以表示为
+
+```py
+w1_1 = np.array([1, 2])
+b1_1 = np.array([-1])
+z1_1 = np.dot(w1_1, x) + b
+a1_1 = sigmoid(z1_1)
+```
+
+同理可计算`a1_2, a1_3`，改写成线性代数计算
+
+```py
+w1 = np.array([1, -3, 5],
+             [2, 4, -6])
+b1 = np.array([-1, 1, 2])
+
+a1 = sigmoid(np.dot(w1, x) + b1)
+```
+
+
+
+再计算a2
+
+```
+w2 = np.array([-7, 8])
+b2 = np.array([3])
+
+a2 = sigmoid(np.dot(w2, a1) + b2)
+```
+
+
+
+# More General Implement of Forward Prop
+
+定义`dense()`函数
+
+```py
+def dense(a_in, W, b, g):
+    '''
+    Args:
+    	a_in (ndarray (m, )): input from previous layer
+    	W (ndarray (m, n)): para matrix in this layer
+    	b (ndarray (n, )): translate para
+    	g (function):
+    Returns:
+    	a_out (ndarray (n, )): output array to next layer
+    '''
+    return g(np.dot(W, a_in) + b)
+```
+
+则`sequential()`函数可以类似
+
+```py
+def sequential(x):
+    a1 = dense(x, W1, b1)
+    a2 = dense(a1, W2, b2)
+    return dense(a2, W3, b3)
+```
+
+
