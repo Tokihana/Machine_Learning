@@ -327,7 +327,22 @@ b2 = np.array([3])
 a2 = sigmoid(np.dot(w2, a1) + b2)
 ```
 
-
+> 实际应用中根据w和a的组织形式，`np.dot`的顺序可能会发生变化，例如，设
+>
+> ```py
+> w = np.array( [[-8.93,  0.29, 12.9 ], [-0.1,  -7.32, 10.81]] )
+> b = np.array( [-9.82, -9.28,  0.96] )
+> a1 = np.array([
+>     [200,13.9],
+>     [200,17]]
+> )
+> ```
+>
+> w是(2, 3)，a1是(2, 2)，样例数`m = 2`，特征数`n = 2`，神经元数`j = 3`，最终结果a2应该为(2, 3)，即2个样例，每个样例的a2输出包含3个元素，此时矩阵是按行标准组织的，因此点乘要倒过来
+>
+> ```
+> a2 = sigmoid(np.dot(a1, w) + b)
+> ```
 
 # More General Implement of Forward Prop
 
@@ -351,9 +366,8 @@ def dense(a_in, W, b, g):
 
 ```py
 def sequential(x):
-    a1 = dense(x, W1, b1)
-    a2 = dense(a1, W2, b2)
-    return dense(a2, W3, b3)
+    a1 = dense(x, W1, b1，sigmoid)
+    a2 = dense(a1, W2, b2, sigmoid)
+    return dense(a2, W3, b3, sigmoid)
 ```
-
 
