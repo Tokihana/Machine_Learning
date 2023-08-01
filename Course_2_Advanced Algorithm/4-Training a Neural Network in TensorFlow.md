@@ -73,7 +73,7 @@ $$
 > $$
 > H(p) = -p \log_2 p - (1-p)\log_2(1-p)
 > $$
-> 其曲线为
+> H是惯用符号，来自热力学，上式的曲线为
 >
 > ![image-20230717103405092](D:\CS\Machine Learning\Course_2_Advanced Algorithm\4-Training a Neural Network in TensorFlow.assets\image-20230717103405092.png)
 >
