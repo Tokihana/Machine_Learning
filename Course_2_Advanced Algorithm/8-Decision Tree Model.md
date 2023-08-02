@@ -126,7 +126,7 @@ $$
 
 ## Continuous valued features
 
-对于连续特征，例如下图，通常使用选定阈值的方式进行划分
+对于连续特征，例如下图，通常使用选定阈值的方式进行划分（连续值离散化，Discretization）
 
 ![image-20230801161727282](D:\CS\Machine Learning\Course_2_Advanced Algorithm\8-Decision Tree Model.assets\image-20230801161727282.png)
 
@@ -137,6 +137,17 @@ $$
 ![image-20230801161947400](D:\CS\Machine Learning\Course_2_Advanced Algorithm\8-Decision Tree Model.assets\image-20230801161947400.png)
 
 
+
+## Missing Value
+
+对于不能包含缺失值的模型，需要填充缺失值，常用的方法为：
+
+- 对连续属性，填充均值
+- 对离散属性，填充众数
+
+这样填充基于样本都是独立同分布的假设。需要注意的是，填充只能用于feature缺失，若target缺失，一般会直接抛弃该样本。
+
+还有一种方法是矩阵补全（matrix completion），在低秩假设下恢复数据。
 
 # Regression Trees
 
@@ -185,3 +196,104 @@ $$
 
 ## Build tree ensemble - sampling with replacement
 
+有放回抽样（sampling with replacement）即在抽样后，将抽出的样例放回样本中，再进行下一次抽样的过程。
+
+举例来说，假设有四个硬币，分别为红、黄、绿、蓝色，有放回抽样，每次取一个
+
+![image-20230802143030330](D:\CS\Machine Learning\Course_2_Advanced Algorithm\8-Decision Tree Model.assets\image-20230802143030330.png)
+
+
+
+将这个过程应用于构建决策树：
+
+1. 将所有的数据构成数据集，然后进行有放回的抽样，得到一个训练集（可能会重复，没关系）
+2. 重复多次抽样，并进行训练
+
+
+
+## Random forest algorithm
+
+$$
+\begin{array}{l}
+训练集大小 = m;\\
+\mathbf {for}\ b = 1\ to\ B:\\
+\quad 有放回抽样创建大小同样为m的新数据集;\\
+\quad 使用抽样得到的数据集训练一棵决策树;\\
+\end{array}
+$$
+
+> 决策树的数量B通常在100左右，64到228之间都可以；过大的B不会带来更好的模型性能，反而会增大运行开销。
+>
+> 这种构建方式也被称为bagged decision tree，因为每棵树都是在一个虚拟的bag上训练而成的。
+
+
+
+bagged decision tree的森林中可能会训练出相似的树结构，导致模型效果不好，可以进一步做出改进，增加特征选择的随机性，即**随机森林算法（Random forest algorithm）**：当需要从n个特征中选择当前节点的划分特征时，首先从n个特征中随机抽样出包含k个特征的子集，从该子集的k个特征中选择划分特征。k的大小一般是$\sqrt n$.
+
+> 通过随机抽样特征，每个决策树都会更多考虑数据集发生微小变化的可能性，并通过组成森林平均这些扰动，从而提升了模型对微小变化的鲁棒性。
+
+
+
+# XGBoost
+
+通过对决策树算法进行些许修改，可以获得更好的模型性能。
+$$
+\begin{array}{l}
+训练集大小 = m;\\
+\mathbf {for}\ b = 1\ to\ B:\\
+\quad 有放回抽样创建大小同样为m的新数据集;\\
+\quad \quad 为当前森林预测错误的样例分配更高的抽样概率，使得新的子集更可能出现此前预测错误的样例\\
+\quad 使用抽样得到的数据集训练一棵决策树;\\
+\end{array}
+$$
+直观上理解，Boost tree算法使得新的树更多关注森林不能正确处理的样例，从而提升了模型的表现。
+
+![image-20230802160617867](D:\CS\Machine Learning\Course_2_Advanced Algorithm\8-Decision Tree Model.assets\image-20230802160617867.png)
+
+
+
+XGBoost（eXtreme Gradient Boosting）是Boost一个开源实现，提供了一系列boost算法的模型和方法，并且内置正则化方法，广泛在竞赛中使用。
+
+```py
+# Classification
+from xgboost import XGBClassifier
+
+model = XGBClassifer()
+model.fit(X, y)
+pred = model.predict(X_test)
+```
+
+```py
+# Regression
+from xgboost import XGBRegressor
+
+model = XGBRegressor
+model.fit(X, y)
+pred = model.predict(X_test)
+```
+
+
+
+# When to use decision trees
+
+**决策树**通常更适合表格（结构化）数据（tabular or structured data），数据类似于电子表格（spreadsheet）；
+
+不适合在非结构化数据，例如图像、音频、文本等数据中使用结构树，这类数据通常不会存在电子表格里。
+
+相比神经网络，决策树的训练时间通常更短；且较小的决策树是可解释的（interpretable），可以通过输出整个树来直观理解决策树如何进行决策。
+
+> 决策树的可解释性通常需要结合可视化手法，尤其是树很大的时候。
+>
+> 通常XGBoost就足够大多数需求了
+
+
+
+**神经网络**适合所有类型的数据，表格和非结构化数据都可以。
+
+对图像、音频、文本等任务，神经网络一般是首选。
+
+比决策树慢，因此周期会比较长。
+
+不过可以使用迁移学习，一方面减少数据量。
+
+多个神经网络可以组合成更大的系统，因为神经网络的输出通常是平滑或连续的，可微。
