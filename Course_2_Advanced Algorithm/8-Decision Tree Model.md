@@ -68,6 +68,36 @@ $$
 
 
 
+二分类熵值计算实现
+
+```py
+def compute_entropy(y):
+    """
+    Computes the entropy for 
+    
+    Args:
+       y (ndarray): Numpy array indicating whether each example at a node is
+           edible (`1`) or poisonous (`0`)
+       
+    Returns:
+        entropy (float): Entropy at that node
+        
+    """
+    # You need to return the following variables correctly
+    entropy = 0.
+    
+    ### START CODE HERE ###
+    if(len(y)):
+        p_1 = y.sum()/len(y)
+        if(p_1 != 0.0 and p_1 != 1.0):
+            entropy = -p_1 * np.log2(p_1) - (1 - p_1) * np.log2(1 - p_1)
+    ### END CODE HERE ###        
+    
+    return entropy
+```
+
+
+
 ## Choosing a split - Information Gain 
 
 在决策树中，熵的减少称为Information Gaim（信息增益）。
@@ -103,6 +133,159 @@ $$
 > 还有一种方法是gain ration（增益率），用于优化信息增益法可能存在的对数量较多属性的偏好。
 >
 > 信息增益、增益率和基尼指数分别对应了$ID3, C4.5和CART$三种决策树算法。
+
+
+
+实现计算信息增益
+
+```py
+def split_dataset(X, node_indices, feature):
+    """
+    Splits the data at the given node into
+    left and right branches
+    
+    Args:
+        X (ndarray):             Data matrix of shape(n_samples, n_features)
+        node_indices (ndarray):  List containing the active indices. I.e, the samples being considered at this step.
+        feature (int):           Index of feature to split on
+    
+    Returns:
+        left_indices (ndarray): Indices with feature value == 1
+        right_indices (ndarray): Indices with feature value == 0
+    """
+    
+    # You need to return the following variables correctly
+    left_indices = []
+    right_indices = []
+    
+    ### START CODE HERE ###
+    left_indices = np.array(node_indices)[X[node_indices, feature] == 1] # 转array防止输入是list
+    right_indices = np.array(node_indices)[X[node_indices, feature] == 0]
+    ### END CODE HERE ###
+        
+    return left_indices.tolist(), right_indices.tolist()
+```
+
+```py
+def compute_information_gain(X, y, node_indices, feature):
+    
+    """
+    Compute the information of splitting the node on a given feature
+    
+    Args:
+        X (ndarray):            Data matrix of shape(n_samples, n_features)
+        y (array like):         list or ndarray with n_samples containing the target variable
+        node_indices (ndarray): List containing the active indices. I.e, the samples being considered in this step.
+   
+    Returns:
+        cost (float):        Cost computed
+    
+    """    
+    # Split dataset
+    left_indices, right_indices = split_dataset(X, node_indices, feature)
+    
+    # Some useful variables
+    X_node, y_node = X[node_indices], y[node_indices]
+    X_left, y_left = X[left_indices], y[left_indices]
+    X_right, y_right = X[right_indices], y[right_indices]
+    
+    # You need to return the following variables correctly
+    information_gain = 0
+    
+    ### START CODE HERE ###
+    
+    # Weights 
+    w_left = len(left_indices) / len(node_indices)
+    w_right = len(right_indices) / len(node_indices)
+    #Weighted entropy
+    H_left = w_left * compute_entropy(y_left)
+    H_right = w_right * compute_entropy(y_right)
+    #Information gain                                                   
+    information_gain = compute_entropy(y_node) - H_left - H_right
+    ### END CODE HERE ###  
+    
+    return information_gain
+```
+
+
+
+选择合适的feature
+
+```py
+def get_best_split(X, y, node_indices):   
+    """
+    Returns the optimal feature and threshold value
+    to split the node data 
+    
+    Args:
+        X (ndarray):            Data matrix of shape(n_samples, n_features)
+        y (array like):         list or ndarray with n_samples containing the target variable
+        node_indices (ndarray): List containing the active indices. I.e, the samples being considered in this step.
+
+    Returns:
+        best_feature (int):     The index of the best feature to split
+    """    
+    
+    # Some useful variables
+    num_features = X.shape[1]
+    
+    # You need to return the following variables correctly
+    best_feature = -1
+    best_gain = 0
+    
+    ### START CODE HERE ###
+    for feature in range(num_features):
+        gain = compute_information_gain(X, y, node_indices, feature)
+        if(gain > best_gain):
+            best_feature = feature
+            best_gain = gain
+       
+    ### END CODE HERE ##    
+   
+    return best_feature
+```
+
+
+
+## Build a tree
+
+```py
+def build_tree_recursive(X, y, node_indices, branch_name, max_depth, current_depth):
+    """
+    Build a tree using the recursive algorithm that split the dataset into 2 subgroups at each node.
+    This function just prints the tree.
+    
+    Args:
+        X (ndarray):            Data matrix of shape(n_samples, n_features)
+        y (array like):         list or ndarray with n_samples containing the target variable
+        node_indices (ndarray): List containing the active indices. I.e, the samples being considered in this step.
+        branch_name (string):   Name of the branch. ['Root', 'Left', 'Right']
+        max_depth (int):        Max depth of the resulting tree. 
+        current_depth (int):    Current depth. Parameter used during recursive call.
+   
+    """ 
+
+    # Maximum depth reached - stop splitting
+    if current_depth == max_depth:
+        formatting = " "*current_depth + "-"*current_depth
+        print(formatting, "%s leaf node with indices" % branch_name, node_indices)
+        return
+   
+    # Otherwise, get best split and split the data
+    # Get the best feature and threshold at this node
+    best_feature = get_best_split(X, y, node_indices) 
+    tree.append((current_depth, branch_name, best_feature, node_indices))
+    
+    formatting = "-"*current_depth
+    print("%s Depth %d, %s: Split on feature: %d" % (formatting, current_depth, branch_name, best_feature))
+    
+    # Split the dataset at the best feature
+    left_indices, right_indices = split_dataset(X, node_indices, best_feature)
+    
+    # continue splitting the left and the right child. Increment current depth
+    build_tree_recursive(X, y, left_indices, "Left", max_depth, current_depth+1)
+    build_tree_recursive(X, y, right_indices, "Right", max_depth, current_depth+1)
+```
 
 
 
@@ -297,3 +480,11 @@ pred = model.predict(X_test)
 不过可以使用迁移学习，一方面减少数据量。
 
 多个神经网络可以组合成更大的系统，因为神经网络的输出通常是平滑或连续的，可微。
+
+
+
+# 参考
+
+- 吴恩达《机器学习2022》
+- 西瓜书
+- 南瓜书
