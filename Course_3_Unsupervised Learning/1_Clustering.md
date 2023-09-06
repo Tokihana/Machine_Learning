@@ -67,6 +67,21 @@ $$
 >
 > 算法的过程使用了贪心思想：每轮迭代都选择当前聚类的最优解（均值）
 
+简单的代码框架
+
+```py
+# Initialize centroids
+centroids = kMeans_init_centroids(X, K)
+
+# intrative
+for iter in range(iterations):
+    # find closest centroid for each example
+    idx = find_closest_centroids(X, centroids)
+    
+    # move centorids to new centroid
+    centroids = compute_means(X, idx, K)
+```
+
 
 
 ## Optimization
@@ -112,8 +127,6 @@ $$
 
 ## Initializing
 
-k-means中k一定严格小于样例数m，因为当$k > m$的时候，样例数都不够均分给每个类别。
-
 初始质心的选择会影响最后收敛的结果，如图所示，第一种收敛效果明显更好一些
 
 <img src="D:\CS\Machine Learning\Course_3_Unsupervised Learning\1_Clustering.assets\image-20230809171811302.png" alt="image-20230809171811302" style="zoom:80%;" />
@@ -134,4 +147,297 @@ $$
 > randTimes通常为50~1000次，太多次数会比较费时间；太少可能找不到比较好的。
 
 
+
+## Number of Clusters
+
+k-means中k一定严格小于样例数m，因为当$k > m$的时候，样例数都不够均分给每个类别。
+
+具体要划分多少类别有时会很难确定，例如下图，既可以说有两类，也可以说有四类。
+
+![image-20230811101015945](D:\CS\Machine Learning\Course_3_Unsupervised Learning\1_Clustering.assets\image-20230811101015945.png)
+
+
+
+一种选择k值的方式是elbow method（肘方法），即尝试多个k值，绘制k-Cost曲线，选择下降速度变得非常慢的那个k值。因为曲线通常很像弯曲的手臂，且被选中的k值位于“手肘”处，所以叫elbow method
+
+![image-20230811101521466](D:\CS\Machine Learning\Course_3_Unsupervised Learning\1_Clustering.assets\image-20230811101521466.png)
+
+
+
+当然，对很多应用来说，k-Cost曲线往往没有明显的肘点；所以elbow method实际上没那么常用。
+
+![image-20230811101642103](D:\CS\Machine Learning\Course_3_Unsupervised Learning\1_Clustering.assets\image-20230811101642103.png)
+
+> 不可以通过$\arg \min_k Cost$的方式来选择k值，因为更多的分类的Cost肯定会更小。
+
+
+
+选择k值也应该更多考虑后续的应用需求，例如，假设要聚类衬衫的尺寸，想要区分S, M, L三种，则可以选择k = 3；如果想要划分的型号为5种（XS, S, M, L, XL），则可以考虑k = 5。当然，在这个例子中，设计不同版型的衬衫以及运输的开销也需要被考虑在内。
+
+![image-20230811102300681](D:\CS\Machine Learning\Course_3_Unsupervised Learning\1_Clustering.assets\image-20230811102300681.png)
+
+
+
+# Implements of k-means
+
+## Find closest centroids
+
+```py
+# UNQ_C1
+# GRADED FUNCTION: find_closest_centroids
+
+def find_closest_centroids(X, centroids):
+    """
+    Computes the centroid memberships for every example
+    
+    Args:
+        X (ndarray): (m, n) Input values      
+        centroids (ndarray): k centroids
+    
+    Returns:
+        idx (array_like): (m,) closest centroids
+    
+    """
+
+    # Set K
+    K = centroids.shape[0]
+    M, N= X.shape
+
+    # You need to return the following variables correctly
+    idx = np.zeros(M, dtype=int)
+
+    ### START CODE HERE ###
+    # reshape for broadcast
+    X = X.reshape((1, M, N))
+    centroids = centroids.reshape((K, 1, N))
+    
+    diff = X - centroids
+    # print(diff)
+    dots = np.einsum('...i,...i->...', diff, diff)
+    # 等价于下面的循环
+    '''
+    dots = np.zeros((K, M))
+    for i in range(K):
+        for j in range(M):
+            dots[i, j] = np.dot(diff[i, j], diff[i, j])
+    ''' 
+    # print(dots)
+    # min idx
+    idx = np.argmin(dots, axis = 0)
+            
+    ### END CODE HERE ###
+    
+    return idx
+```
+
+> reshape整理广播维度，这里将数据整理为(k, m, n)
+>
+> `np.argmin`返回array中对应轴向最小值的索引。
+>
+> `np.einsum()`计算`Einstein summation convention`，一种计算线性代数计算的表示方法。`dots = np.einsum('...i,...i->...', diff, diff)`中的`'...i,...i->...'`是说明符，意思是分别取两个数组的最后一维进行内积，并返回整个结果数组。
+>
+> `->`用于显式指明输出格式，`...`用于缺省维度，标记符`i`没有严格要求，也可以改成其他标记符，例如
+>
+> ```py
+> >>> norm = np.einsum('...i,...i->...', dif, dif)
+> >>> norm
+> array([[  6,  86, 294, 630],
+>        [  6,  54, 230, 534]])
+>        
+> >>> norm = np.einsum('...c,...c->...', dif, dif)
+> >>> norm
+> array([[  6,  86, 294, 630],
+>        [  6,  54, 230, 534]])
+> ```
+>
+> `einsum()`一些常见的其他操作
+>
+> ```py
+> # 求转置
+> >>> c = np.arange(6).reshape(2,3)
+> >>> c
+> array([[0, 1, 2],
+>        [3, 4, 5]])
+> >>> np.einsum('ij->ji', c)
+> array([[0, 3],
+>        [1, 4],
+>        [2, 5]])
+> ```
+>
+> ```py
+> # 提对角线
+> a = np.arange(25).reshape(5,5)
+> >>> a
+> array([[ 0,  1,  2,  3,  4],
+>        [ 5,  6,  7,  8,  9],
+>        [10, 11, 12, 13, 14],
+>        [15, 16, 17, 18, 19],
+>        [20, 21, 22, 23, 24]])
+> >>> np.einsum('ii->i', a)
+> array([ 0,  6, 12, 18, 24])
+> ```
+>
+> ```py
+> # 求迹（tr），即对角线和
+> np.einsum('ii', a)
+> >>> np.einsum('ii->...', a)
+> 60
+> >>> np.trace(a)
+> 60
+> ```
+
+
+
+## Computing centroid means
+
+```py
+# UNQ_C2
+# GRADED FUNCTION: compute_centpods
+
+def compute_centroids(X, idx, K):
+    """
+    Returns the new centroids by computing the means of the 
+    data points assigned to each centroid.
+    
+    Args:
+        X (ndarray):   (m, n) Data points
+        idx (ndarray): (m,) Array containing index of closest centroid for each 
+                       example in X. Concretely, idx[i] contains the index of 
+                       the centroid closest to example i
+        K (int):       number of centroids
+    
+    Returns:
+        centroids (ndarray): (K, n) New centroids computed
+    """
+    
+    # Useful variables
+    m, n = X.shape
+    
+    # You need to return the following variables correctly
+    centroids = np.zeros((K, n))
+    
+    ### START CODE HERE ###
+    for i in range(K):
+        c_k = X[idx == i]
+        centroids[i] = c_k.mean(axis = 0)
+    ### END CODE HERE ## 
+    
+    return centroids
+```
+
+
+
+## Random initialization
+
+```py
+def kMeans_init_centroids(X, K):
+    """
+    This function initializes K centroids that are to be 
+    used in K-Means on the dataset X
+    Args:
+    X (ndarray): Data points 
+    K (int):     number of centroids/clusters
+	Returns:
+    centroids (ndarray): Initialized centroids
+	"""
+
+	# Randomly reorder the indices of examples
+	randidx = np.random.permutation(X.shape[0])
+	
+	# Take the first K examples as centroids
+	centroids = X[randidx[:K]]
+	
+	return centroids
+```
+
+> `np.random.permutation()`随机洗牌所有的样例索引，`[:k]`选取前k个随机样例。
+
+
+
+# Example: Compress image
+
+尝试使用k-means来压缩图像。具体的思路为：
+
+1. 将每个像素视为一个样例，每个样例是一个RGB值
+2. 通过k-means统计出16个最主要的颜色（质心）
+3. 将所有的颜色替换为这16个颜色
+
+
+
+示例图像
+
+![image-20230811155243316](D:\CS\Machine Learning\Course_3_Unsupervised Learning\1_Clustering.assets\image-20230811155243316.png)
+
+
+## Dataset
+
+```py
+# load image
+img = plt.imread('bird.png')
+img.shape
+'''
+(128, 128, 3)
+'''
+```
+
+```py
+# precessing data
+img = img/255
+X_img = np.reshape(img, (img.shape[0]*img.shape[1], 3))
+```
+
+
+
+## Comress img
+
+```py
+K = 16
+max_iters = 10
+# init centroids
+centroids = kMeans_init_centroids(X_img, K)
+
+# run k-means
+centroids, idx = run_kMeans(X_img, centroids, max_iters)
+```
+
+```py
+X_recovered = centroids[idx, :]
+X_recovered = np.reshape(X_recovered, img.shape)
+```
+
+
+
+## plot
+
+```py
+fig, ax = plt.subplots(1, 2, figsize=(8,8))
+plt.axis('off')
+
+ax[0].imshow(original_img*255)
+ax[0].set_title('Original')
+ax[0].set_axis_off()
+
+# Display compressed image
+ax[1].imshow(X_recovered*255)
+ax[1].set_title('Compressed with %d colours'%K)
+ax[1].set_axis_off()
+```
+
+![image-20230811160129697](D:\CS\Machine Learning\Course_3_Unsupervised Learning\1_Clustering.assets\image-20230811160129697.png)
+
+k=64，迭代30轮的结果
+
+![image-20230811160429975](D:\CS\Machine Learning\Course_3_Unsupervised Learning\1_Clustering.assets\image-20230811160429975.png)
+
+图像大小对比
+
+![image-20230811160512443](D:\CS\Machine Learning\Course_3_Unsupervised Learning\1_Clustering.assets\image-20230811160512443.png)
+
+
+
+# 参考
+
+- 吴恩达《机器学习2022》
+- 西瓜书
+- 南瓜书
 
